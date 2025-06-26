@@ -60,9 +60,9 @@ _deps = [
     "pytest",
     "safetensors>=0.3.3",
     "sentencepiece>=0.1.99",
-    "torch>=2.5.1",
+    # "torch>=2.5.1",
     "transformers==4.49.0",
-    "trl @ git+https://github.com/huggingface/trl.git@main",
+    # "trl @ git+https://github.com/huggingface/trl.git@main",
     "vllm==0.6.6.post1",
     "wandb>=0.19.1",
     "pillow",
@@ -83,7 +83,7 @@ def deps_list(*pkgs):
 
 extras = {}
 extras["tests"] = deps_list("pytest", "parameterized")
-extras["torch"] = deps_list("torch")
+# extras["torch"] = deps_list("torch")
 extras["quality"] = deps_list("black", "isort", "flake8")
 # extras["eval"] = deps_list("lighteval", "math-verify")
 extras["eval"] = deps_list("math-verify")
@@ -103,7 +103,7 @@ install_requires = [
     deps["safetensors"],
     deps["sentencepiece"],
     deps["transformers"],
-    deps["trl"],
+    # deps["trl"],
 ]
 
 setup(

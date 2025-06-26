@@ -66,6 +66,13 @@ class Qwen2VLModule(VLMBaseModule):
     @staticmethod
     def get_question_template(task_type: str):
         match task_type:
+            case "emo":
+                QUESTION_TEMPLATE = (  
+                    "{Question} "  
+                    "First output the thinking process in <think>...</think> tags, "  
+                    "then output the final emotion—choose only from [Angry, Disgust, Fear, Happy, Neutral, Sad, Surprised]—using one word in <answer>...</answer> tags."  
+                )
+                return QUESTION_TEMPLATE
             case "rec":
                 return "{Question} First output the thinking process in <think> </think> tags and then output the final answer in <answer> </answer> tags. Output the final answer in JSON format."
             case "ic":

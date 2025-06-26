@@ -19,7 +19,7 @@ from datetime import datetime
 from dataclasses import dataclass, field
 from typing import Optional
 from babel.numbers import parse_decimal
-from utils.math import compute_score
+from open_r1.utils.math import compute_score
 from datasets import load_dataset, load_from_disk
 from transformers import Qwen2VLForConditionalGeneration
 
@@ -30,6 +30,7 @@ import PIL
 from Levenshtein import ratio
 from open_r1.utils.pycocotools.coco import COCO
 from open_r1.utils.pycocotools.cocoeval import COCOeval
+from open_r1.prompts.emotion_prompt import GRPO_PROMPT, SFT_PROMPT  
 import json
 import math
 from json_repair import repair_json
@@ -41,6 +42,9 @@ from transformers.utils import logging
 from transformers import AutoProcessor, AutoTokenizer
 
 from openai import OpenAI
+# import wandb
+
+# wandb.init(project="Qwen-emotion-grpo")
 
 logger = logging.get_logger(__name__)
 
@@ -908,12 +912,12 @@ reward_funcs_registry = {
 class GRPOModelConfig(ModelConfig):
     freeze_vision_modules: bool = False
 
-SYSTEM_PROMPT = (
-    "A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant "
-    "first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning "
-    "process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., "
-    "<think> reasoning process here </think><answer> answer here </answer>"
-)
+# SYSTEM_PROMPT = (
+#     "A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant "
+#     "first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning "
+#     "process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., "
+#     "<think> reasoning process here </think><answer> answer here </answer>"
+# )
 
 
 def get_vlm_module(model_name_or_path):
@@ -928,7 +932,7 @@ def main(script_args, training_args, model_args):
     # Load the VLM module
     vlm_module_cls = get_vlm_module(model_args.model_name_or_path)
     print("using vlm module:", vlm_module_cls.__name__)
-    question_prompt = vlm_module_cls.get_question_template(task_type=script_args.task_type)
+    # question_prompt = vlm_module_cls.get_question_template(task_type=script_args.task_type)
 
     # Get reward functions 
     if script_args.is_reward_customized_from_vlm_module:
@@ -973,37 +977,38 @@ def main(script_args, training_args, model_args):
                         del item['image'] # remove the image column so that it can be loaded later
                     else:
                         raise ValueError(f"Unsupported image type: {type(item['image'])}")
-                # Remove immediate image loading
-                item['problem'] = item['conversations'][0]['value'].replace('<image>', '')
                 
                 # Handle solution that could be a float or string
-                solution_value = item['conversations'][1]['value']
+                solution_value = item['labels'][0]
                 if isinstance(solution_value, str):
                     item['solution'] = solution_value.replace('<answer>', '').replace('</answer>', '').strip()
                 else:
                     # If it's a float or other non-string type, keep it as is
                     item['solution'] = str(solution_value)
                 
-                del item['conversations']
                 item['accu_reward_method'] = item.get('accu_reward_method', accu_reward_method) # if accu_reward_method is in the data jsonl, use the value in the data jsonl, otherwise use the defined value
                 all_data.append(item)
 
     dataset = Dataset.from_list(all_data)
 
     def make_conversation_from_jsonl(example):
+        if example['question']:
+            question = example['question'].replace('<image>', '').strip()
+        else:
+            question = "What is the emotion of this face?"
         if 'image_path' in example and example['image_path'] is not None:
             assert all(os.path.exists(p) for p in example['image_path']), f"Image paths do not exist: {example['image_path']}"
             # Don't load image here, just store the path
             return {
                 'image_path': [p for p in example['image_path']],  # Store path instead of loaded image
-                'problem': example['problem'],
+                'problem': question,
                 'solution': f"<answer> {example['solution']} </answer>",
                 'accu_reward_method': example['accu_reward_method'],
                 'prompt': [{
                     'role': 'user',
                     'content': [
                         *({'type': 'image', 'text': None} for _ in range(len(example['image_path']))),
-                        {'type': 'text', 'text': question_prompt.format(Question=example['problem'])}
+                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question)}
                     ]
                 }]
             }
@@ -1015,7 +1020,7 @@ def main(script_args, training_args, model_args):
                 'prompt': [{
                     'role': 'user',
                     'content': [
-                        {'type': 'text', 'text': question_prompt.format(Question=example['problem'])}
+                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question)}
                     ]
                 }]
             }
@@ -1053,7 +1058,7 @@ def main(script_args, training_args, model_args):
     )
 
     # Train and push the model to the Hub
-    if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")):
+    if list(pathlib.Path(training_args.output_dir).glob("checkpoint-*")) and training_args.resume_from_checkpoint==True:
         trainer.train(resume_from_checkpoint=True)
     else:
         trainer.train()

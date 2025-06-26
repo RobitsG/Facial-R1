@@ -14,30 +14,12 @@
 
 """
 Supervised fine-tuning script for decoder language models.
-
-Usage:
-
-# One 1 node of 8 x H100s
-accelerate launch --config_file=configs/zero3.yaml src/open_r1/sft.py \
-    --model_name_or_path Qwen/Qwen2.5-1.5B-Instruct \
-    --dataset_name HuggingFaceH4/Bespoke-Stratos-17k \
-    --learning_rate 2.0e-5 \
-    --num_train_epochs 1 \
-    --packing \
-    --max_seq_length 4096 \
-    --per_device_train_batch_size 4 \
-    --gradient_accumulation_steps 4 \
-    --gradient_checkpointing \
-    --bf16 \
-    --logging_steps 5 \
-    --eval_strategy steps \
-    --eval_steps 100 \
-    --output_dir data/Qwen2.5-1.5B-Open-R1-Distill
 """
 
 import logging
 import os
 import sys
+import copy
 
 import datasets
 import torch
@@ -48,11 +30,15 @@ from transformers import AutoTokenizer, set_seed, AutoProcessor
 from transformers.trainer_utils import get_last_checkpoint
 from open_r1.configs import SFTConfig
 from open_r1.utils.callbacks import get_callbacks
+from open_r1.prompts.emotion_prompt import SFT_PROMPT
 import yaml
 import json
 import math
 import random
 from PIL import Image
+# import wandb
+
+# wandb.init(project="Qwen-emotion-sft")
 
 from trl import (
     ModelConfig,
@@ -137,25 +123,26 @@ class LazySupervisedDataset(Dataset):
         # Format into conversation
         def make_conversation_image(example):
             image_root = self.script_args.image_root
-            # print(111, image_root)
-            # print(222, example['image'])
             image_path = os.path.join(image_root, example['image'])
-            x1, y1, x2, y2 = example["solution"]
-            normal_caption = example["normal_caption"]
-            return  [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "image", "image": f"file://{image_path}"},
-                            {"type": "text", "text": example["problem"]},
-                        ],
-                    },
-                    {
-                        "role": "assistant",
-                        "content": f'```json\n[\n\t{{"bbox_2d": [{int(x1)}, {int(y1)}, {int(x2)}, {int(y2)}], "label": "{normal_caption}"}}\n]\n```',
-                    }
-                ]
+            if example['question']:
+                question = example['question'].relace('<image>', '').strip()
+            else:
+                question = "What is the emotion of this face?"
 
+            label = example['labels'][0]
+            return  [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "image", "image": f"file://{image_path}"},
+                        {"type": "text", "text": SFT_PROMPT.format(Question=question)},
+                    ],
+                },
+                {
+                    "role": "assistant",
+                    "content": label,
+                }
+            ]
         example = self.list_data_dict[i]
         example["messages"] = make_conversation_image(example)
         return example
@@ -304,7 +291,7 @@ def main(script_args, training_args, model_args):
         checkpoint = last_checkpoint
     train_result = trainer.train(resume_from_checkpoint=checkpoint)
     metrics = train_result.metrics
-    metrics["train_samples"] = len(dataset[script_args.dataset_train_split])
+    metrics["train_samples"] = len(dataset)
     trainer.log_metrics("train", metrics)
     trainer.save_metrics("train", metrics)
     trainer.save_state()
@@ -314,27 +301,20 @@ def main(script_args, training_args, model_args):
     ##################################
     logger.info("*** Save model ***")
     trainer.save_model(training_args.output_dir)
+    processor.save_pretrained(training_args.output_dir)
     logger.info(f"Model saved to {training_args.output_dir}")
 
-    # Save everything else on main process
-    kwargs = {
-        "finetuned_from": model_args.model_name_or_path,
-        "dataset": list(script_args.dataset_name),
-        "dataset_tags": list(script_args.dataset_name),
-        "tags": ["open-r1"],
-    }
     if trainer.accelerator.is_main_process:
-        trainer.create_model_card(**kwargs)
-        # Restore k,v cache for fast inference
-        trainer.model.config.use_cache = True
-        trainer.model.config.save_pretrained(training_args.output_dir)
-    #############
-    # push to hub
-    #############
-
-    if training_args.push_to_hub:
-        logger.info("Pushing to hub...")
-        trainer.push_to_hub(**kwargs)
+        # 先用默认方法生成
+        trainer.create_model_card()
+        # 追加自定义内容
+        model_card_path = os.path.join(training_args.output_dir, "README.md")
+        with open(model_card_path, "a") as f:
+            f.write(
+                f"\n\n## Finetuned from\n{model_args.model_name_or_path}\n"
+                f"\n## Dataset\n{str(script_args.dataset_name)}\n"
+                f"\n## Tags\nopen-r1\n"
+            )
 
 
 
