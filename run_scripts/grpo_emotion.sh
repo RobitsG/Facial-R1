@@ -6,8 +6,8 @@ export EXP_NAME="Qwen2.5-VL-7B-Instruct-emotion-grpo"
 echo "REPO_HOME: $REPO_HOME"
 TASK_TYPE="emo"
 home_dir="/root/paddlejob/workspace/wujiulong"
-data_paths="$home_dir/emotion_dataset/RAF-DB-Train.jsonl" 
-image_folders="$home_dir/emotion_dataset/RAF-DB-Train"
+data_paths="$home_dir/emotion_dataset/FABA-top1.jsonl" 
+image_folders="$home_dir/emotion_dataset/FABA"
 model_path="$home_dir/Qwen2.5-VL-7B-Instruct"
 # model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-sft"
 output_path="${home_dir}/output/checkpoints/${EXP_NAME}"
@@ -22,8 +22,8 @@ export LOG_PATH="${home_dir}/output/logs/${EXP_NAME}.log"
 
 
 # export WANDB_DISABLED=true
-export CUDA_VISIBLE_DEVICES=0,1,2,3
-torchrun --nproc_per_node="4" \
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5
+torchrun --nproc_per_node="6" \
     --nnodes="1" \
     --node_rank="0" \
     --master_addr="127.0.0.1" \
@@ -31,13 +31,13 @@ torchrun --nproc_per_node="4" \
   src/open_r1/grpo_jsonl.py \
     --use_vllm False \
     --output_dir $output_path \
-    --resume_from_checkpoint True \
+    --resume_from_checkpoint False \
     --model_name_or_path $model_path \
     --data_file_paths $data_paths \
     --image_folders $image_folders \
     --is_reward_customized_from_vlm_module $is_reward_customized_from_vlm_module \
     --task_type $TASK_TYPE \
-    --per_device_train_batch_size 8 \
+    --per_device_train_batch_size 2 \
     --gradient_accumulation_steps 2 \
     --gradient_checkpointing true \
     --logging_steps 1 \
@@ -47,11 +47,11 @@ torchrun --nproc_per_node="4" \
     --run_name ${EXP_NAME} \
     --data_seed 42 \
     --save_strategy no \
-    --save_steps 1000000000000000 \
-    --max_steps 100 \
-    --num_generations 8 \
+    --save_steps 1000 \
+    --max_steps 1000 \
+    --num_generations 6 \
     --max_completion_length 2048 \
-    --reward_funcs accuracy format \
+    --reward_funcs accuracy format au \
     --beta 0.04 \
     --report_to wandb \
     --dataset-name this_is_not_used \

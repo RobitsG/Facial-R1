@@ -901,9 +901,48 @@ def format_reward(completions, **kwargs):
     return [1.0 if match else 0.0 for match in matches]
 
 
+def extract_aus_from_text(text):
+    """
+    从文本中 `<think> ... </think>` 标签里提取所有 AU，返回大写列表。
+    - 支持标签内无/有多个AU（如 '在这张脸上，AU6和AU12最为明显'）
+    - 没有think标签时返回空列表
+    """
+    if not isinstance(text, str):
+        return []
+    think_match = re.search(r"<think>(.*?)</think>", text, re.DOTALL | re.IGNORECASE)
+    if not think_match:
+        return []
+    think_text = think_match.group(1)
+    return re.findall(r"AU\d+", think_text.upper())
+
+
+def au_reward(completions, AUs, **kwargs):
+    rewards = []
+    completion_contents = [completion[0]["content"] for completion in completions]
+    for pred, gt in zip(completion_contents, AUs):
+        pred_aus = extract_aus_from_text(pred) if isinstance(pred, str) else pred
+        gt_aus_set = set([s.upper() for s in gt])
+        pred_aus_set = set([s.upper() for s in pred_aus])
+
+        if not gt_aus_set and not pred_aus_set:
+            reward = 2.0    # 全都为空，P=1, R=1
+        elif not pred_aus_set:
+            reward = 0.0    # 没预测出任何结果
+        elif not gt_aus_set:
+            reward = 0.0    # 没有GT
+        else:
+            intersection = len(pred_aus_set & gt_aus_set)
+            precision = intersection / len(pred_aus_set) if pred_aus_set else 0.0
+            recall = intersection / len(gt_aus_set) if gt_aus_set else 0.0
+            reward = precision + recall  # ∈ [0, 2]
+        rewards.append(reward)
+    return rewards
+
+
 reward_funcs_registry = {
     "accuracy": accuracy_reward,
     "format": format_reward,
+    "au": au_reward,
     "length": cosine_rewards,
     "repetition": repetition_rewards,
 }
@@ -985,6 +1024,8 @@ def main(script_args, training_args, model_args):
                 else:
                     # If it's a float or other non-string type, keep it as is
                     item['solution'] = str(solution_value)
+                del item['meta_info']
+                del item['description']
                 
                 item['accu_reward_method'] = item.get('accu_reward_method', accu_reward_method) # if accu_reward_method is in the data jsonl, use the value in the data jsonl, otherwise use the defined value
                 all_data.append(item)
@@ -1002,8 +1043,11 @@ def main(script_args, training_args, model_args):
             return {
                 'image_path': [p for p in example['image_path']],  # Store path instead of loaded image
                 'problem': question,
-                'solution': f"<answer> {example['solution']} </answer>",
+                'solution': f"<answer>{example['solution']}</answer>",
                 'accu_reward_method': example['accu_reward_method'],
+                'Aus': example['AUs'],
+                # 'description': example['description'],
+                'labels': example['labels'],
                 'prompt': [{
                     'role': 'user',
                     'content': [
@@ -1013,17 +1057,18 @@ def main(script_args, training_args, model_args):
                 }]
             }
         else:
-            return {
-                'problem': example['problem'],
-                'solution': f"<answer> {example['solution']} </answer>",
-                'accu_reward_method': example['accu_reward_method'],
-                'prompt': [{
-                    'role': 'user',
-                    'content': [
-                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question)}
-                    ]
-                }]
-            }
+            raise ValueError("No image path found")
+            # return {
+            #     'problem': example['problem'],
+            #     'solution': f"<answer> {example['solution']} </answer>",
+            #     'accu_reward_method': example['accu_reward_method'],
+            #     'prompt': [{
+            #         'role': 'user',
+            #         'content': [
+            #             {'type': 'text', 'text': GRPO_PROMPT.format(Question=question)}
+            #         ]
+            #     }]
+            # }
 
     # Map the conversations
     dataset = dataset.map(make_conversation_from_jsonl, num_proc=8)

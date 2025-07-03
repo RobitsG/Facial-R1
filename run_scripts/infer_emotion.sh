@@ -1,7 +1,7 @@
 export WANDB_API_KEY="726eb58e29b9cbfaf940dc4f286ec9b28749963d"
 export CUDA_VISIBLE_DEVICES=0,1,2,3
 
-TEST_MODE="sft"
+TEST_MODE="grpo"
 TEST_DATASET="RAF-DB-Test"
 TEST_EXAMPLES=2000
 HOME_PATH="/root/paddlejob/workspace/wujiulong"
