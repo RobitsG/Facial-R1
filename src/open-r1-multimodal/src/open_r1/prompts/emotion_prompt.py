@@ -1,10 +1,10 @@
 GRPO_PROMPT = (
-    "{Question} "
+    "Question: {Question}\n"
     "First, output the thinking process in <think>...</think> tags, "
     "producing a concise and precise analysis by only describing the most decisive AUs and how these lead to your emotion inference. "
     "Seamlessly integrate only truly relevant AU numbers (in parentheses), directly tying each to your emotional reasoning—avoid uncertainty, negations, or mentioning unlikely emotions. "
     "Use these AU definitions and their possible emotional associations:"
-    "\\nAU1: Inner brow raiser [Sadness, Fear, Surprise]; "
+    "\nAU1: Inner brow raiser [Sadness, Fear, Surprise]; "
     "AU2: Outer brow raiser [Fear, Surprise]; "
     "AU4: Brow lowerer [Anger, Sadness]; "
     "AU5: Upper lid raiser [Fear, Surprise]; "
@@ -33,10 +33,10 @@ GRPO_PROMPT = (
     "AU30: Jaw sideways; "
     "AU31: Jaw clencher [Anger]; "
     "AU32: Lip bite [Sadness, Fear]; "
-    "AU43: Eyes closed.\\n"
-    "After the thinking process, output only the final emotion—choose one from [anger, happiness, sadness, neutral, disgust, surprise, fear]—as a single word in <answer>...</answer> tags.\\n"
+    "AU43: Eyes closed.\n"
+    "After the thinking process, output only the final emotion—choose one from [anger, happiness, sadness, neutral, disgust, surprise, fear]—as a single word in <answer>...</answer> tags.\n"
     "Here is a sample of the required analysis style:"
-    "\\n<think>The man's eyebrows are pulled together and lowered (AU4), and the mouth corners are downturned (AU15). This combination of brow lowering (AU4) and mouth corner depression (AU15) is a strong indicator of sadness.</think> "
+    "\n<think>The man's eyebrows are pulled together and lowered (AU4), and the mouth corners are downturned (AU15). This combination of brow lowering (AU4) and mouth corner depression (AU15) is a strong indicator of sadness.</think> "
     "<answer>sadness</answer>"
 )
 

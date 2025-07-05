@@ -13,7 +13,7 @@ echo "data_paths: $data_paths"
 echo "image_folders: $image_folders"
 
 export EXP_NAME="Qwen2.5-VL-7B-Instruct-emotion-sft"
-cd ${REPO_HOME}/src/open-r1-multimodal
+cd ${REPO_HOME}/src/open-r1-multimodal/src
 
 export DEBUG_MODE="true"
 export LOG_PATH="${home_dir}/output/logs/${EXP_NAME}.log"
@@ -21,7 +21,7 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 accelerate launch \
     --config_file=${REPO_HOME}/src/open-r1-multimodal/configs/zero3.yaml \
-    src/open_r1/sft.py \
+    open_r1/sft.py \
     --model_name_or_path $model_path \
     --dataset_name $data_paths \
     --image_root $image_folders \

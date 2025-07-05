@@ -6,15 +6,15 @@ export EXP_NAME="Qwen2.5-VL-7B-Instruct-emotion-grpo"
 echo "REPO_HOME: $REPO_HOME"
 TASK_TYPE="emo"
 home_dir="/root/paddlejob/workspace/wujiulong"
-data_paths="$home_dir/emotion_dataset/FABA-top1.jsonl" 
-image_folders="$home_dir/emotion_dataset/FABA"
+data_paths="$home_dir/emotion_dataset/RAF-AU-Train.jsonl" 
+image_folders="$home_dir/emotion_dataset/RAF-AU-Train"
 model_path="$home_dir/Qwen2.5-VL-7B-Instruct"
-# model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-sft"
+# model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-grpo"
 output_path="${home_dir}/output/checkpoints/${EXP_NAME}"
 is_reward_customized_from_vlm_module=False
 echo "data_paths: $data_paths"
 echo "image_folders: $image_folders"
-cd ${REPO_HOME}/src/open-r1-multimodal
+cd ${REPO_HOME}/src/open-r1-multimodal/src
 
 export DEBUG_MODE="true" # Enable Debug if you want to see the rollout of model during RL
 export LOG_PATH="${home_dir}/output/logs/${EXP_NAME}.log"
@@ -22,13 +22,13 @@ export LOG_PATH="${home_dir}/output/logs/${EXP_NAME}.log"
 
 
 # export WANDB_DISABLED=true
-export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5
-torchrun --nproc_per_node="6" \
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
+torchrun --nproc_per_node="8" \
     --nnodes="1" \
     --node_rank="0" \
     --master_addr="127.0.0.1" \
     --master_port="12349" \
-  src/open_r1/grpo_jsonl.py \
+  open_r1/grpo_jsonl.py \
     --use_vllm False \
     --output_dir $output_path \
     --resume_from_checkpoint False \
@@ -47,9 +47,9 @@ torchrun --nproc_per_node="6" \
     --run_name ${EXP_NAME} \
     --data_seed 42 \
     --save_strategy no \
-    --save_steps 1000 \
-    --max_steps 1000 \
-    --num_generations 6 \
+    --save_steps 10000000000 \
+    --max_steps 500 \
+    --num_generations 8 \
     --max_completion_length 2048 \
     --reward_funcs accuracy format au \
     --beta 0.04 \

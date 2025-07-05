@@ -1005,6 +1005,8 @@ def main(script_args, training_args, model_args):
         with open(data_file, 'r') as f:
             for line in f:
                 item = json.loads(line)
+                if not item.get('AUs'):
+                    continue
                 if 'image' in item:
                     if isinstance(item['image'], str):
                         # Store image path instead of loading the image
