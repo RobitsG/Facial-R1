@@ -1,0 +1,436 @@
+{
+  "JAFFE.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "RAF-DB-Test.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "FER2013-Train.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "FABA-Test.jsonl": {
+    "AUs": [
+      "AU1",
+      "AU10",
+      "AU12",
+      "AU14",
+      "AU15",
+      "AU16",
+      "AU17",
+      "AU2",
+      "AU20",
+      "AU23",
+      "AU24",
+      "AU25",
+      "AU26",
+      "AU27",
+      "AU4",
+      "AU43",
+      "AU5",
+      "AU6",
+      "AU7",
+      "AU9"
+    ],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "NHFI.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "contempt",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "KDEF.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "ExpW.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "SFEW-Train.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "WSEFEP.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "FABA.jsonl": {
+    "AUs": [
+      "AU0",
+      "AU01",
+      "AU02",
+      "AU04",
+      "AU05",
+      "AU06",
+      "AU1",
+      "AU10",
+      "AU11",
+      "AU12",
+      "AU13",
+      "AU14",
+      "AU15",
+      "AU16",
+      "AU17",
+      "AU18",
+      "AU19",
+      "AU2",
+      "AU20",
+      "AU22",
+      "AU23",
+      "AU24",
+      "AU25",
+      "AU26",
+      "AU27",
+      "AU28",
+      "AU30",
+      "AU32",
+      "AU33",
+      "AU34",
+      "AU38",
+      "AU4",
+      "AU41",
+      "AU42",
+      "AU43",
+      "AU44",
+      "AU45",
+      "AU46",
+      "AU49",
+      "AU5",
+      "AU53",
+      "AU54",
+      "AU55",
+      "AU5B",
+      "AU6",
+      "AU64",
+      "AU6c",
+      "AU7",
+      "AU8",
+      "AU9"
+    ],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "DISFA-Train.jsonl": {
+    "AUs": [
+      "AU1",
+      "AU12",
+      "AU15",
+      "AU17",
+      "AU2",
+      "AU20",
+      "AU25",
+      "AU26",
+      "AU4",
+      "AU5",
+      "AU6",
+      "AU9"
+    ],
+    "emotions": []
+  },
+  "NIMH-ChEFS.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness"
+    ]
+  },
+  "FABA-Train.jsonl": {
+    "AUs": [
+      "AU1",
+      "AU10",
+      "AU11",
+      "AU12",
+      "AU14",
+      "AU15",
+      "AU16",
+      "AU17",
+      "AU18",
+      "AU19",
+      "AU2",
+      "AU20",
+      "AU22",
+      "AU23",
+      "AU24",
+      "AU25",
+      "AU26",
+      "AU27",
+      "AU28",
+      "AU30",
+      "AU33",
+      "AU4",
+      "AU43",
+      "AU44",
+      "AU45",
+      "AU5",
+      "AU53",
+      "AU54",
+      "AU6",
+      "AU7",
+      "AU8",
+      "AU9"
+    ],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "AffectNet-Test.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "contempt",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "CK+.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "contempt",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "DISFA-Test.jsonl": {
+    "AUs": [
+      "AU1",
+      "AU12",
+      "AU15",
+      "AU17",
+      "AU2",
+      "AU20",
+      "AU25",
+      "AU26",
+      "AU4",
+      "AU5",
+      "AU6",
+      "AU9"
+    ],
+    "emotions": []
+  },
+  "RAF-DB-Train.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "RAF-AU-Train.jsonl": {
+    "AUs": [
+      "AU1",
+      "AU10",
+      "AU12",
+      "AU14",
+      "AU15",
+      "AU16",
+      "AU17",
+      "AU18",
+      "AU19",
+      "AU2",
+      "AU20",
+      "AU21",
+      "AU22",
+      "AU23",
+      "AU24",
+      "AU25",
+      "AU26",
+      "AU27",
+      "AU28",
+      "AU29",
+      "AU30",
+      "AU32",
+      "AU34",
+      "AU35",
+      "AU39",
+      "AU4",
+      "AU43",
+      "AU5",
+      "AU6",
+      "AU7",
+      "AU9",
+      "AUAD19",
+      "AUBL18",
+      "AURB18",
+      "AUt23"
+    ],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "SFEW-Test.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "FER2013-Test.jsonl": {
+    "AUs": [],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "neutral",
+      "sadness",
+      "surprise"
+    ]
+  },
+  "RAF-AU-Test.jsonl": {
+    "AUs": [
+      "AU1",
+      "AU10",
+      "AU12",
+      "AU14",
+      "AU15",
+      "AU16",
+      "AU17",
+      "AU18",
+      "AU19",
+      "AU2",
+      "AU20",
+      "AU22",
+      "AU23",
+      "AU24",
+      "AU25",
+      "AU26",
+      "AU27",
+      "AU28",
+      "AU29",
+      "AU30",
+      "AU32",
+      "AU33",
+      "AU34",
+      "AU35",
+      "AU39",
+      "AU4",
+      "AU43",
+      "AU5",
+      "AU6",
+      "AU7",
+      "AU9"
+    ],
+    "emotions": [
+      "anger",
+      "disgust",
+      "fear",
+      "happiness",
+      "sadness",
+      "surprise"
+    ]
+  }
+}

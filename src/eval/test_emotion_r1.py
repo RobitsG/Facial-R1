@@ -18,6 +18,17 @@ from collections import defaultdict
 from sklearn.metrics import f1_score, accuracy_score
 import numpy as np
 
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+set_seed(42)
+
+with open('/root/paddlejob/workspace/wujiulong/Facial-R1/src/open-r1-multimodal/src/open_r1/configs/config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
+
 # -------- AU评估函数 --------
 
 def sort_au_key(au):
@@ -138,6 +149,7 @@ for ds in args.test_datasets:
     if rank == args.main_rank:
         print(f"\nProcessing {ds}...")
     ds_path = os.path.join(args.data_root, f"{ds}.jsonl")
+    emotions = config[os.path.basename(ds_path)]["emotions"]
     data = []
     with open(ds_path, "r") as file:
         for line in file:
@@ -168,7 +180,7 @@ for ds in args.test_datasets:
                 "role": "user",
                 "content": [
                     {"type": "image", "image": f"file://{img}"},
-                    {"type": "text", "text": QUESTION_PROMPT.format(Question=question)}
+                    {"type": "text", "text": QUESTION_PROMPT.format(Question=question, Emotions=emotions)}
                 ]
             }
         ])

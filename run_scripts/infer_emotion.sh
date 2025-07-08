@@ -5,7 +5,7 @@ TEST_MODE="grpo"
 TEST_DATASET="FABA-Test"
 TEST_EXAMPLES=2000
 HOME_PATH="/root/paddlejob/workspace/wujiulong"
-MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-${TEST_MODE}-faba"
+MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-${TEST_MODE}"
 cd $HOME_PATH/Facial-R1/src/eval
 export PYTHONPATH=$PYTHONPATH:$HOME_PATH/Facial-R1/src/open-r1-multimodal/src
 

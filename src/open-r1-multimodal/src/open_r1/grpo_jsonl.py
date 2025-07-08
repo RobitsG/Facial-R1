@@ -33,6 +33,9 @@ from open_r1.utils.pycocotools.cocoeval import COCOeval
 from open_r1.prompts.emotion_prompt import GRPO_PROMPT, SFT_PROMPT  
 import json
 import math
+import random
+import numpy as np
+import torch
 from json_repair import repair_json
 
 from open_r1.vlm_modules import *
@@ -45,6 +48,17 @@ from openai import OpenAI
 # import wandb
 
 # wandb.init(project="Qwen-emotion-grpo")
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+set_seed(42)
+
+with open('open_r1/configs/config.json', 'r', encoding='utf-8') as f:
+    config = json.load(f)
 
 logger = logging.get_logger(__name__)
 
@@ -916,7 +930,7 @@ def extract_aus_from_text(text):
     return re.findall(r"AU\d+", think_text.upper())
 
 
-def au_reward(completions, AUs, **kwargs):
+def au_reward(completions, AUs, beta=1.0, **kwargs):
     rewards = []
     completion_contents = [completion[0]["content"] for completion in completions]
     for pred, gt in zip(completion_contents, AUs):
@@ -925,16 +939,18 @@ def au_reward(completions, AUs, **kwargs):
         pred_aus_set = set([s.upper() for s in pred_aus])
 
         if not gt_aus_set and not pred_aus_set:
-            reward = 2.0    # 全都为空，P=1, R=1
-        elif not pred_aus_set:
-            reward = 0.0    # 没预测出任何结果
-        elif not gt_aus_set:
-            reward = 0.0    # 没有GT
+            reward = 1.0      # 全对，最高奖励
+        elif not pred_aus_set or not gt_aus_set:
+            reward = -1.0     # 没预测或没GT，最低奖励
         else:
             intersection = len(pred_aus_set & gt_aus_set)
             precision = intersection / len(pred_aus_set) if pred_aus_set else 0.0
             recall = intersection / len(gt_aus_set) if gt_aus_set else 0.0
-            reward = precision + recall  # ∈ [0, 2]
+            f_beta = (
+                (1 + beta ** 2) * precision * recall /
+                (beta ** 2 * precision + recall)
+            ) if (precision + recall) else 0.0
+            reward = 2 * f_beta - 1  # 转为[-1, 1]
         rewards.append(reward)
     return rewards
 
@@ -1002,9 +1018,12 @@ def main(script_args, training_args, model_args):
     
     all_data = []
     for data_file, image_folder, accu_reward_method in zip(data_files, image_folders, accu_reward_methods):
+        data_file_name = os.path.basename(data_file)
+        emotions = config[data_file_name]['emotions']
         with open(data_file, 'r') as f:
             for line in f:
                 item = json.loads(line)
+                item['emotions'] = emotions
                 if not item.get('AUs'):
                     continue
                 if 'image' in item:
@@ -1032,6 +1051,7 @@ def main(script_args, training_args, model_args):
                 item['accu_reward_method'] = item.get('accu_reward_method', accu_reward_method) # if accu_reward_method is in the data jsonl, use the value in the data jsonl, otherwise use the defined value
                 all_data.append(item)
 
+    random.shuffle(all_data)
     dataset = Dataset.from_list(all_data)
 
     def make_conversation_from_jsonl(example):
@@ -1054,7 +1074,7 @@ def main(script_args, training_args, model_args):
                     'role': 'user',
                     'content': [
                         *({'type': 'image', 'text': None} for _ in range(len(example['image_path']))),
-                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question)}
+                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question, Emotions=example['emotions'])}
                     ]
                 }]
             }

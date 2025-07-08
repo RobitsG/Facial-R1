@@ -36,9 +36,14 @@ import json
 import math
 import random
 from PIL import Image
-# import wandb
 
-# wandb.init(project="Qwen-emotion-sft")
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+set_seed(42)
 
 from trl import (
     ModelConfig,
@@ -82,6 +87,8 @@ class LazySupervisedDataset(Dataset):
 
                 for data in datasets:
                     json_path = data.get("json_path")
+                    json_path = data.get("json_path")
+                    emotions = config[os.path.basename(json_path)]["emotions"]
                     sampling_strategy = data.get("sampling_strategy", "all")
                     sampling_number = None
 
@@ -89,10 +96,9 @@ class LazySupervisedDataset(Dataset):
                         cur_data_dict = []
                         with open(json_path, "r") as json_file:
                             for line in json_file:
-                                cur_data_dict.append(json.loads(line.strip()))
-                    elif json_path.endswith(".json"):
-                        with open(json_path, "r") as json_file:
-                            cur_data_dict = json.load(json_file)
+                                item = json.loads(line.strip())
+                                item['emotions'] = emotions
+                                cur_data_dict.append()
                     else:
                         raise ValueError(f"Unsupported file type: {json_path}")
 
@@ -135,7 +141,7 @@ class LazySupervisedDataset(Dataset):
                     "role": "user",
                     "content": [
                         {"type": "image", "image": f"file://{image_path}"},
-                        {"type": "text", "text": SFT_PROMPT.format(Question=question)},
+                        {"type": "text", "text": SFT_PROMPT.format(Question=question, Emotions=example['emotions'])},
                     ],
                 },
                 {

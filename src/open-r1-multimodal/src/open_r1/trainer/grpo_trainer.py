@@ -519,6 +519,48 @@ class VLMGRPOTrainer(Trainer):
         else:
             return [ele]
 
+    def compute_think_token_mask(self, processing_class, completion_ids):
+        """
+        processing_class: 通常是一个 Processor，其有 attributes: .tokenizer, .image_processor, etc.
+        completion_ids: torch.LongTensor, shape (batch, seq_len)
+        """
+        tokenizer = getattr(processing_class, "tokenizer", processing_class)  # 自动兜底
+        batch_size, seq_len = completion_ids.shape
+        mask = torch.zeros_like(completion_ids, dtype=torch.bool)
+        think_start_ids = tokenizer.encode('<think>', add_special_tokens=False)
+        think_end_ids = tokenizer.encode('</think>', add_special_tokens=False)
+        for b in range(batch_size):
+            tokens = completion_ids[b].tolist()
+            start_idxs, end_idxs = [], []
+            # 找start
+            search_from = 0
+            while True:
+                try:
+                    idx = tokens.index(think_start_ids[0], search_from)
+                    if tokens[idx:idx+len(think_start_ids)] == think_start_ids:
+                        start_idxs.append(idx + len(think_start_ids))
+                        search_from = idx + len(think_start_ids)
+                    else:
+                        search_from = idx + 1
+                except ValueError:
+                    break
+            # 找end
+            search_from = 0
+            while True:
+                try:
+                    idx = tokens.index(think_end_ids[0], search_from)
+                    if tokens[idx:idx+len(think_end_ids)] == think_end_ids:
+                        end_idxs.append(idx)
+                        search_from = idx + len(think_end_ids)
+                    else:
+                        search_from = idx + 1
+                except ValueError:
+                    break
+            for s, e in zip(start_idxs, end_idxs):
+                if e > s:
+                    mask[b, s:e] = True
+        return mask
+
     def _generate_and_score_completions(self, inputs: dict[str, Union[torch.Tensor, Any]], model) -> dict[str, Union[torch.Tensor, Any]]:
         device = self.accelerator.device
         prompts = [x["prompt"] for x in inputs]
@@ -560,6 +602,8 @@ class VLMGRPOTrainer(Trainer):
             padding_side="left",
             add_special_tokens=False,
         )
+        del images
+        torch.cuda.empty_cache()
         prompt_inputs = super()._prepare_inputs(prompt_inputs)
         prompt_ids, prompt_mask = prompt_inputs["input_ids"], prompt_inputs["attention_mask"]
 
@@ -628,8 +672,8 @@ class VLMGRPOTrainer(Trainer):
 
         # Decode the generated completions
         completions = self.processing_class.batch_decode(completion_ids, skip_special_tokens=True)
-        # for completion in completions:
-        #     print(completion)
+        for completion in completions:
+            print(completion)
         if is_conversational(inputs[0]):
             completions = [[{"role": "assistant", "content": completion}] for completion in completions]
 
@@ -652,6 +696,8 @@ class VLMGRPOTrainer(Trainer):
                 reward_inputs = super()._prepare_inputs(reward_inputs)
                 with torch.inference_mode():
                     rewards_per_func[:, i] = reward_func(**reward_inputs).logits[:, 0]  # Shape (B*G,)
+                    del reward_inputs
+                    torch.cuda.empty_cache()
             else:
                 # Repeat all input columns (but "prompt" and "completion") to match the number of generations
                 reward_kwargs = {key: [] for key in inputs[0].keys() if key not in ["prompt", "completion"]}
@@ -698,10 +744,27 @@ class VLMGRPOTrainer(Trainer):
                 reward_func_name = reward_func.__name__
             self._metrics[f"rewards/{reward_func_name}"].append(reward_per_func[i].item())
 
-        self._metrics["reward"].append(self.accelerator.gather_for_metrics(rewards).mean().item())
+        reward_names = []
+        for reward_func in self.reward_funcs:
+            if isinstance(reward_func, PreTrainedModel):
+                reward_names.append(reward_func.config._name_or_path.split("/")[-1])
+            else:
+                reward_names.append(reward_func.__name__)
 
+        # au_reward 需要<think>区间，其余全token
+        tag_mask_dict = {}
+        for rname in reward_names:
+            if "au_reward" in rname:  # 自行根据实际reward_model名字/你的reward_func.__name__决定
+                tag_mask = self.compute_think_token_mask(self.processing_class, completion_ids)
+                tag_mask_dict[rname] = tag_mask  # shape = (batch, seq_len)
+            else:
+                tag_mask_dict[rname] = torch.ones_like(completion_ids, dtype=torch.bool)
+
+        self._metrics["reward"].append(self.accelerator.gather_for_metrics(rewards).mean().item())
         self._metrics["reward_std"].append(self.accelerator.gather_for_metrics(std_grouped_rewards).mean().item())
 
+        del attention_mask
+        torch.cuda.empty_cache()
         return {
             "prompt_ids": prompt_ids,
             "prompt_mask": prompt_mask,
@@ -710,6 +773,7 @@ class VLMGRPOTrainer(Trainer):
             "old_per_token_logps": old_per_token_logps,
             "ref_per_token_logps": ref_per_token_logps,
             "advantages": advantages,
+            "tag_mask_dict": tag_mask_dict,
             "multimodal_inputs": multimodal_inputs
         }
 
@@ -729,49 +793,69 @@ class VLMGRPOTrainer(Trainer):
         prompt_ids, prompt_mask = inputs["prompt_ids"], inputs["prompt_mask"]
         completion_ids, completion_mask = inputs["completion_ids"], inputs["completion_mask"]
         multimodal_inputs = inputs["multimodal_inputs"]
+        tag_mask_dict = inputs["tag_mask_dict"]
         
-        # Concatenate for full sequence
-        input_ids = torch.cat([prompt_ids, completion_ids], dim=1)
-        attention_mask = torch.cat([prompt_mask, completion_mask], dim=1)
+        # 重新计算/提取所有reward相关数据
+        prompt_len = prompt_ids.shape[1]
 
-        # Get the current policy's log probabilities
-        per_token_logps = self._get_per_token_logps(model, input_ids, attention_mask, **multimodal_inputs)
-        # Get rid of the prompt (-1 because of the shift done in get_per_token_logps)
-        per_token_logps = per_token_logps[:, prompt_ids.size(1) - 1:]
+        total_loss = 0
+        reward_names = list(tag_mask_dict.keys())  # 顺序需和后续变量保持一致
 
-        # Get the advantages from inputs
-        advantages = inputs["advantages"]
+        for idx, rname in enumerate(reward_names):
+            # 指定的advantage、per_token_logps等要按reward分别处理
+            # 这里假设advantages, old_per_token_logps, ref_per_token_logps都是shape [batch] or [batch, seq_len]
+            # 你可根据上一步_reward计算出来的reward_per_func[:, idx]继续往下算
 
-        # When using num_iterations == 1, old_per_token_logps == per_token_logps, so we can skip its computation
-        # and use per_token_logps.detach() instead
-        old_per_token_logps = inputs["old_per_token_logps"] if self.num_iterations > 1 else per_token_logps.detach()
+            # 提取该reward对应 advantage
+            advantages = inputs["advantages"]           # size: [batch_size]
+            # 若advantage已经是多reward分别，改为inputs["advantages"][rname]或[batch, num_reward]
+            advantage = advantages if len(advantages.shape) == 1 else advantages[:, idx]
+            advantage = advantage.unsqueeze(1)   # shape [batch, 1]
+            
+            # 拿policy logp
+            if "old_per_token_logps" in inputs and inputs["old_per_token_logps"] is not None:
+                old_per_token_logps = inputs["old_per_token_logps"][:, :]  # [batch, seq_len]
+            else:
+                old_per_token_logps = None
+            
+            if "ref_per_token_logps" in inputs and inputs["ref_per_token_logps"] is not None:
+                ref_per_token_logps = inputs["ref_per_token_logps"][:, :]  # [batch, seq_len]
+            else:
+                ref_per_token_logps = None
 
-        # Compute the policy ratio and clipped version
-        coef_1 = torch.exp(per_token_logps - old_per_token_logps)
-        coef_2 = torch.clamp(coef_1, 1 - self.epsilon_low, 1 + self.epsilon_high)
-        per_token_loss1 = coef_1 * advantages.unsqueeze(1)
-        per_token_loss2 = coef_2 * advantages.unsqueeze(1)
-        per_token_loss = -torch.min(per_token_loss1, per_token_loss2)
+            # 当前policy logp
+            input_ids = torch.cat([prompt_ids, completion_ids], dim=1)
+            attention_mask = torch.cat([prompt_mask, completion_mask], dim=1)
+            per_token_logps = self._get_per_token_logps(model, input_ids, attention_mask, **multimodal_inputs)
+            per_token_logps = per_token_logps[:, prompt_len - 1:]  # 只保留completion段
 
-        # Add KL penalty if beta > 0
-        if self.beta > 0:
-            ref_per_token_logps = inputs["ref_per_token_logps"]
-            per_token_kl = torch.exp(ref_per_token_logps - per_token_logps) - (ref_per_token_logps - per_token_logps) - 1
-            per_token_loss = per_token_loss + self.beta * per_token_kl
+            # old logp
+            if old_per_token_logps is None:
+                old_per_token_logps = per_token_logps.detach()
 
-            # Log KL divergence
-            mean_kl = ((per_token_kl * completion_mask).sum(dim=1) / completion_mask.sum(dim=1)).mean()
-            self._metrics["kl"].append(self.accelerator.gather_for_metrics(mean_kl).mean().item())
+            # 计算每token的core loss（PPO clip各种）
+            coef_1 = torch.exp(per_token_logps - old_per_token_logps)
+            coef_2 = torch.clamp(coef_1, 1 - self.epsilon_low, 1 + self.epsilon_high)
+            per_token_loss1 = coef_1 * advantage
+            per_token_loss2 = coef_2 * advantage
+            per_token_loss = -torch.min(per_token_loss1, per_token_loss2)
 
-        # Compute final loss
-        loss = ((per_token_loss * completion_mask).sum(dim=1) / completion_mask.sum(dim=1)).mean()
+            # KL penalty（可选）
+            if self.beta > 0 and ref_per_token_logps is not None:
+                per_token_kl = torch.exp(ref_per_token_logps - per_token_logps) - (ref_per_token_logps - per_token_logps) - 1
+                per_token_loss = per_token_loss + self.beta * per_token_kl
 
-        # Log clip ratio
-        is_clipped = (per_token_loss1 < per_token_loss2).float()
-        clip_ratio = (is_clipped * completion_mask).sum() / completion_mask.sum()
-        self._metrics["clip_ratio"].append(self.accelerator.gather_for_metrics(clip_ratio).mean().item())
+            # 应用mask：completion_mask对齐，然后再叠加reward专属tag_mask
+            tag_mask = tag_mask_dict[rname].type_as(completion_mask)
+            final_mask = completion_mask * tag_mask
 
-        return loss
+            # 致密求loss
+            loss = ((per_token_loss * final_mask).sum(dim=1) / final_mask.sum(dim=1).clamp(min=1)).mean()
+            total_loss += loss
+            del per_token_loss, per_token_loss1, per_token_loss2, coef_1, coef_2
+            torch.cuda.empty_cache()
+
+        return total_loss / len(reward_names)
 
     def log(self, logs: dict[str, float], start_time: Optional[float] = None) -> None:
         metrics = {key: sum(val) / len(val) for key, val in self._metrics.items()}  # average the metrics
