@@ -1,436 +1,481 @@
 {
   "JAFFE.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "anger": 0.14,
+      "disgust": 0.14,
+      "fear": 0.15,
+      "happiness": 0.15,
+      "neutral": 0.14,
+      "sadness": 0.15,
+      "surprise": 0.14
+    }
   },
   "RAF-DB-Test.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "neutral": 0.22,
+      "disgust": 0.05,
+      "sadness": 0.16,
+      "fear": 0.02,
+      "happiness": 0.39,
+      "surprise": 0.11,
+      "anger": 0.05
+    }
   },
   "FER2013-Train.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "anger": 0.14,
+      "disgust": 0.02,
+      "fear": 0.14,
+      "happiness": 0.25,
+      "sadness": 0.17,
+      "surprise": 0.11,
+      "neutral": 0.17
+    }
   },
   "FABA-Test.jsonl": {
-    "AUs": [
-      "AU1",
-      "AU10",
-      "AU12",
-      "AU14",
-      "AU15",
-      "AU16",
-      "AU17",
-      "AU2",
-      "AU20",
-      "AU23",
-      "AU24",
-      "AU25",
-      "AU26",
-      "AU27",
-      "AU4",
-      "AU43",
-      "AU5",
-      "AU6",
-      "AU7",
-      "AU9"
-    ],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {
+      "AU6": 0.25,
+      "AU12": 0.3,
+      "AU25": 0.43,
+      "AU1": 0.44,
+      "AU2": 0.29,
+      "AU5": 0.27,
+      "AU26": 0.23,
+      "AU4": 0.46,
+      "AU9": 0.11,
+      "AU15": 0.14,
+      "AU17": 0.16,
+      "AU10": 0.13,
+      "AU20": 0.1,
+      "AU24": 0.24,
+      "AU7": 0.18,
+      "AU14": 0.03,
+      "AU23": 0.11,
+      "AU27": 0.09,
+      "AU43": 0.01,
+      "AU16": 0.02
+    },
+    "emotions": {
+      "happiness": 0.21,
+      "surprise": 0.13,
+      "disgust": 0.08,
+      "sadness": 0.11,
+      "neutral": 0.33,
+      "fear": 0.07,
+      "anger": 0.08
+    }
   },
   "NHFI.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "contempt",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "anger": 0.16,
+      "contempt": 0.04,
+      "disgust": 0.08,
+      "fear": 0.1,
+      "happiness": 0.25,
+      "neutral": 0.09,
+      "sadness": 0.13,
+      "surprise": 0.14
+    }
   },
   "KDEF.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "fear": 0.14,
+      "anger": 0.14,
+      "disgust": 0.14,
+      "happiness": 0.14,
+      "neutral": 0.14,
+      "sadness": 0.14,
+      "surprise": 0.14
+    }
   },
   "ExpW.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "neutral": 0.38,
+      "sadness": 0.12,
+      "happiness": 0.33,
+      "anger": 0.04,
+      "disgust": 0.04,
+      "fear": 0.01,
+      "surprise": 0.08
+    }
   },
   "SFEW-Train.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "happiness": 0.22,
+      "neutral": 0.18,
+      "surprise": 0.1,
+      "anger": 0.2,
+      "sadness": 0.17,
+      "fear": 0.09,
+      "disgust": 0.05
+    }
   },
   "WSEFEP.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "neutral": 0.14,
+      "happiness": 0.14,
+      "disgust": 0.14,
+      "surprise": 0.14,
+      "fear": 0.14,
+      "sadness": 0.14,
+      "anger": 0.15
+    }
   },
   "FABA.jsonl": {
-    "AUs": [
-      "AU0",
-      "AU01",
-      "AU02",
-      "AU04",
-      "AU05",
-      "AU06",
-      "AU1",
-      "AU10",
-      "AU11",
-      "AU12",
-      "AU13",
-      "AU14",
-      "AU15",
-      "AU16",
-      "AU17",
-      "AU18",
-      "AU19",
-      "AU2",
-      "AU20",
-      "AU22",
-      "AU23",
-      "AU24",
-      "AU25",
-      "AU26",
-      "AU27",
-      "AU28",
-      "AU30",
-      "AU32",
-      "AU33",
-      "AU34",
-      "AU38",
-      "AU4",
-      "AU41",
-      "AU42",
-      "AU43",
-      "AU44",
-      "AU45",
-      "AU46",
-      "AU49",
-      "AU5",
-      "AU53",
-      "AU54",
-      "AU55",
-      "AU5B",
-      "AU6",
-      "AU64",
-      "AU6c",
-      "AU7",
-      "AU8",
-      "AU9"
-    ],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {
+      "AU6": 0.59,
+      "AU12": 0.66,
+      "AU24": 0.24,
+      "AU1": 0.55,
+      "AU4": 0.64,
+      "AU25": 0.64,
+      "AU26": 0.33,
+      "AU2": 0.32,
+      "AU5": 0.44,
+      "AU14": 0.03,
+      "AU7": 0.43,
+      "AU10": 0.27,
+      "AU27": 0.1,
+      "AU17": 0.28,
+      "AU23": 0.16,
+      "AU9": 0.34,
+      "AU20": 0.21,
+      "AU15": 0.27,
+      "AU43": 0.03,
+      "AU06": 0.0,
+      "AU16": 0.02,
+      "AU22": 0.01,
+      "AU18": 0.01,
+      "AU28": 0.0,
+      "AU6c": 0.0,
+      "AU45": 0.01,
+      "AU64": 0.0,
+      "AU11": 0.0,
+      "AU05": 0.0,
+      "AU53": 0.0,
+      "AU01": 0.0,
+      "AU02": 0.0,
+      "AU5B": 0.0,
+      "AU46": 0.0,
+      "AU44": 0.0,
+      "AU34": 0.0,
+      "AU33": 0.0,
+      "AU32": 0.0,
+      "AU41": 0.0,
+      "AU0": 0.0,
+      "AU30": 0.0,
+      "AU19": 0.0,
+      "AU13": 0.0,
+      "AU8": 0.0,
+      "AU54": 0.0,
+      "AU49": 0.0,
+      "AU55": 0.0,
+      "AU42": 0.0,
+      "AU04": 0.0,
+      "AU38": 0.0
+    },
+    "emotions": {
+      "happiness": 0.26,
+      "neutral": 0.3,
+      "surprise": 0.17,
+      "fear": 0.09,
+      "disgust": 0.02,
+      "sadness": 0.09,
+      "anger": 0.06
+    }
   },
   "DISFA-Train.jsonl": {
-    "AUs": [
-      "AU1",
-      "AU12",
-      "AU15",
-      "AU17",
-      "AU2",
-      "AU20",
-      "AU25",
-      "AU26",
-      "AU4",
-      "AU5",
-      "AU6",
-      "AU9"
-    ],
-    "emotions": []
+    "AUs": {
+      "AU12": 0.23,
+      "AU26": 0.16,
+      "AU25": 0.32,
+      "AU4": 0.23,
+      "AU1": 0.06,
+      "AU20": 0.03,
+      "AU15": 0.05,
+      "AU17": 0.11,
+      "AU6": 0.16,
+      "AU2": 0.05,
+      "AU5": 0.03,
+      "AU9": 0.06
+    },
+    "emotions": {}
   },
   "NIMH-ChEFS.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness"
-    ]
+    "AUs": {},
+    "emotions": {
+      "anger": 0.2,
+      "fear": 0.2,
+      "happiness": 0.2,
+      "neutral": 0.21,
+      "sadness": 0.2
+    }
   },
   "FABA-Train.jsonl": {
-    "AUs": [
-      "AU1",
-      "AU10",
-      "AU11",
-      "AU12",
-      "AU14",
-      "AU15",
-      "AU16",
-      "AU17",
-      "AU18",
-      "AU19",
-      "AU2",
-      "AU20",
-      "AU22",
-      "AU23",
-      "AU24",
-      "AU25",
-      "AU26",
-      "AU27",
-      "AU28",
-      "AU30",
-      "AU33",
-      "AU4",
-      "AU43",
-      "AU44",
-      "AU45",
-      "AU5",
-      "AU53",
-      "AU54",
-      "AU6",
-      "AU7",
-      "AU8",
-      "AU9"
-    ],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {
+      "AU1": 0.35,
+      "AU2": 0.24,
+      "AU5": 0.24,
+      "AU26": 0.23,
+      "AU27": 0.06,
+      "AU6": 0.53,
+      "AU12": 0.51,
+      "AU25": 0.56,
+      "AU4": 0.39,
+      "AU9": 0.15,
+      "AU7": 0.2,
+      "AU20": 0.1,
+      "AU15": 0.15,
+      "AU17": 0.16,
+      "AU24": 0.13,
+      "AU23": 0.08,
+      "AU10": 0.14,
+      "AU16": 0.01,
+      "AU43": 0.01,
+      "AU18": 0.0,
+      "AU22": 0.0,
+      "AU14": 0.01,
+      "AU11": 0.0,
+      "AU45": 0.0,
+      "AU28": 0.0,
+      "AU19": 0.0,
+      "AU33": 0.0,
+      "AU44": 0.0,
+      "AU30": 0.0,
+      "AU8": 0.0,
+      "AU54": 0.0,
+      "AU53": 0.0
+    },
+    "emotions": {
+      "surprise": 0.14,
+      "neutral": 0.2,
+      "happiness": 0.39,
+      "fear": 0.07,
+      "anger": 0.07,
+      "sadness": 0.11,
+      "disgust": 0.02
+    }
   },
   "AffectNet-Test.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "contempt",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "disgust": 0.12,
+      "surprise": 0.13,
+      "fear": 0.12,
+      "neutral": 0.13,
+      "sadness": 0.12,
+      "contempt": 0.13,
+      "happiness": 0.13,
+      "anger": 0.12
+    }
   },
   "CK+.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "contempt",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "neutral": 0.33,
+      "disgust": 0.12,
+      "surprise": 0.17,
+      "anger": 0.09,
+      "happiness": 0.14,
+      "sadness": 0.06,
+      "fear": 0.05,
+      "contempt": 0.04
+    }
   },
   "DISFA-Test.jsonl": {
-    "AUs": [
-      "AU1",
-      "AU12",
-      "AU15",
-      "AU17",
-      "AU2",
-      "AU20",
-      "AU25",
-      "AU26",
-      "AU4",
-      "AU5",
-      "AU6",
-      "AU9"
-    ],
-    "emotions": []
+    "AUs": {
+      "AU12": 0.23,
+      "AU25": 0.43,
+      "AU26": 0.26,
+      "AU6": 0.11,
+      "AU5": 0.01,
+      "AU1": 0.08,
+      "AU2": 0.07,
+      "AU17": 0.08,
+      "AU4": 0.13,
+      "AU20": 0.04,
+      "AU9": 0.05,
+      "AU15": 0.08
+    },
+    "emotions": {}
   },
   "RAF-DB-Train.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "happiness": 0.39,
+      "anger": 0.06,
+      "disgust": 0.06,
+      "sadness": 0.16,
+      "surprise": 0.11,
+      "neutral": 0.21,
+      "fear": 0.02
+    }
   },
   "RAF-AU-Train.jsonl": {
-    "AUs": [
-      "AU1",
-      "AU10",
-      "AU12",
-      "AU14",
-      "AU15",
-      "AU16",
-      "AU17",
-      "AU18",
-      "AU19",
-      "AU2",
-      "AU20",
-      "AU21",
-      "AU22",
-      "AU23",
-      "AU24",
-      "AU25",
-      "AU26",
-      "AU27",
-      "AU28",
-      "AU29",
-      "AU30",
-      "AU32",
-      "AU34",
-      "AU35",
-      "AU39",
-      "AU4",
-      "AU43",
-      "AU5",
-      "AU6",
-      "AU7",
-      "AU9",
-      "AUAD19",
-      "AUBL18",
-      "AURB18",
-      "AUt23"
-    ],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {
+      "AU1": 0.24,
+      "AU4": 0.39,
+      "AU25": 0.62,
+      "AU9": 0.17,
+      "AU12": 0.28,
+      "AU26": 0.24,
+      "AU43": 0.04,
+      "AU5": 0.22,
+      "AU6": 0.1,
+      "AU7": 0.07,
+      "AU2": 0.18,
+      "AU22": 0.08,
+      "AU20": 0.05,
+      "AU10": 0.3,
+      "AU15": 0.06,
+      "AU17": 0.12,
+      "AU18": 0.03,
+      "AU27": 0.18,
+      "AU24": 0.05,
+      "AU16": 0.16,
+      "AU14": 0.03,
+      "AU23": 0.03,
+      "AU29": 0.01,
+      "AU21": 0.0,
+      "AU28": 0.01,
+      "AU39": 0.0,
+      "AUAD19": 0.0,
+      "AU19": 0.01,
+      "AU32": 0.0,
+      "AU34": 0.0,
+      "AU35": 0.0,
+      "AUt23": 0.0,
+      "AU30": 0.0,
+      "AUBL18": 0.0,
+      "AURB18": 0.0
+    },
+    "emotions": {
+      "sadness": 0.16,
+      "anger": 0.21,
+      "fear": 0.08,
+      "surprise": 0.2,
+      "happiness": 0.12,
+      "disgust": 0.23
+    }
   },
   "SFEW-Test.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "happiness": 0.18,
+      "anger": 0.19,
+      "neutral": 0.21,
+      "disgust": 0.07,
+      "sadness": 0.18,
+      "surprise": 0.1,
+      "fear": 0.07
+    }
+  },
+  "FABA-Train-iter1.jsonl": {
+    "AUs": {
+      "AU1": 0.35,
+      "AU2": 0.24,
+      "AU5": 0.24,
+      "AU26": 0.23,
+      "AU27": 0.06,
+      "AU6": 0.53,
+      "AU12": 0.51,
+      "AU25": 0.56,
+      "AU4": 0.39,
+      "AU9": 0.15,
+      "AU7": 0.2,
+      "AU20": 0.1,
+      "AU15": 0.15,
+      "AU17": 0.16,
+      "AU24": 0.13,
+      "AU23": 0.08,
+      "AU10": 0.14,
+      "AU16": 0.01,
+      "AU43": 0.01,
+      "AU18": 0.0,
+      "AU22": 0.0,
+      "AU14": 0.01,
+      "AU11": 0.0,
+      "AU45": 0.0,
+      "AU28": 0.0,
+      "AU19": 0.0,
+      "AU33": 0.0,
+      "AU44": 0.0,
+      "AU30": 0.0,
+      "AU8": 0.0,
+      "AU54": 0.0,
+      "AU53": 0.0
+    },
+    "emotions": {
+      "surprise": 0.14,
+      "neutral": 0.2,
+      "happiness": 0.39,
+      "fear": 0.07,
+      "anger": 0.07,
+      "sadness": 0.11,
+      "disgust": 0.02
+    }
   },
   "FER2013-Test.jsonl": {
-    "AUs": [],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "neutral",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {},
+    "emotions": {
+      "anger": 0.14,
+      "disgust": 0.02,
+      "fear": 0.15,
+      "happiness": 0.24,
+      "sadness": 0.17,
+      "surprise": 0.12,
+      "neutral": 0.17
+    }
   },
   "RAF-AU-Test.jsonl": {
-    "AUs": [
-      "AU1",
-      "AU10",
-      "AU12",
-      "AU14",
-      "AU15",
-      "AU16",
-      "AU17",
-      "AU18",
-      "AU19",
-      "AU2",
-      "AU20",
-      "AU22",
-      "AU23",
-      "AU24",
-      "AU25",
-      "AU26",
-      "AU27",
-      "AU28",
-      "AU29",
-      "AU30",
-      "AU32",
-      "AU33",
-      "AU34",
-      "AU35",
-      "AU39",
-      "AU4",
-      "AU43",
-      "AU5",
-      "AU6",
-      "AU7",
-      "AU9"
-    ],
-    "emotions": [
-      "anger",
-      "disgust",
-      "fear",
-      "happiness",
-      "sadness",
-      "surprise"
-    ]
+    "AUs": {
+      "AU12": 0.27,
+      "AU24": 0.05,
+      "AU4": 0.41,
+      "AU7": 0.09,
+      "AU9": 0.17,
+      "AU25": 0.61,
+      "AU1": 0.22,
+      "AU14": 0.02,
+      "AU17": 0.11,
+      "AU2": 0.15,
+      "AU5": 0.19,
+      "AU26": 0.22,
+      "AU10": 0.3,
+      "AU16": 0.15,
+      "AU27": 0.17,
+      "AU43": 0.03,
+      "AU28": 0.01,
+      "AU15": 0.08,
+      "AU6": 0.09,
+      "AU22": 0.07,
+      "AU23": 0.03,
+      "AU20": 0.04,
+      "AU18": 0.03,
+      "AU30": 0.0,
+      "AU34": 0.0,
+      "AU29": 0.01,
+      "AU35": 0.0,
+      "AU19": 0.01,
+      "AU32": 0.0,
+      "AU39": 0.0,
+      "AU33": 0.0
+    },
+    "emotions": {
+      "anger": 0.22,
+      "disgust": 0.22,
+      "sadness": 0.18,
+      "surprise": 0.23,
+      "fear": 0.06,
+      "happiness": 0.09
+    }
   }
 }
