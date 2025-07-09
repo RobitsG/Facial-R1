@@ -96,9 +96,11 @@ class LazySupervisedDataset(Dataset):
                         cur_data_dict = []
                         with open(json_path, "r") as json_file:
                             for line in json_file:
+                                if item.get("is_valid", True) == False:
+                                    continue
                                 item = json.loads(line.strip())
                                 item['emotions'] = emotions
-                                cur_data_dict.append()
+                                cur_data_dict.append(item)
                     else:
                         raise ValueError(f"Unsupported file type: {json_path}")
 
@@ -328,5 +330,7 @@ def main(script_args, training_args, model_args):
 if __name__ == "__main__":
     parser = TrlParser((SFTScriptArguments, SFTConfig, ModelConfig))
     script_args, training_args, model_args = parser.parse_args_and_config()
+    with open('open_r1/configs/config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
     print(script_args)
     main(script_args, training_args, model_args)

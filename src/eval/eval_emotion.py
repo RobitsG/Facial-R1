@@ -26,9 +26,6 @@ def set_seed(seed):
     os.environ['PYTHONHASHSEED'] = str(seed)
 set_seed(42)
 
-with open('/root/paddlejob/workspace/wujiulong/Facial-R1/src/open-r1-multimodal/src/open_r1/configs/config.json', 'r', encoding='utf-8') as f:
-    config = json.load(f)
-
 # -------- AU评估函数 --------
 
 def sort_au_key(au):
@@ -124,6 +121,7 @@ def parse_args():
     parser.add_argument("--eval_targets", nargs='+', default=["label", "au"], choices=["label", "au"], help="选择要评估的目标，可为 label（情感分类准确率）、au（AU F1分数），可以多选")
     parser.add_argument("--model_path", type=str, default=None, help="模型路径")
     parser.add_argument("--output_path", type=str, default=None, help="输出日志路径")
+    parser.add_argument("--config_path", type=str, default=None)
     args = parser.parse_args()
     if args.model_path is None:
         args.model_path = f"{args.home_path}/output/checkpoints/{args.run_name}"
@@ -134,7 +132,8 @@ def parse_args():
 args = parse_args()
 
 # -------- 模型与处理器 --------
-
+with open(args.config_path, 'r', encoding='utf-8') as f:
+    config = json.load(f)
 model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
     args.model_path,
     torch_dtype=torch.bfloat16,

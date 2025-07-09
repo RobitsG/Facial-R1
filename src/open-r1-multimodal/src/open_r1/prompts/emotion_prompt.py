@@ -4,48 +4,58 @@ GRPO_PROMPT = '''
 
 ### Requirements
 First, output the thinking process in <think>...</think> tags. 
-    Provide a concise and precise analysis focusing on the critical Action Units (AUs). 
-    Mark AU numbers in parentheses, and then explain the connection between the AUs and the emotion. 
-    ⚠️Forbidden to use negative or uncertain expressions such as "no", "not", "without" or "maybe".
+    - Provide a concise and precise analysis as a continuous paragraph focusing on the critical Action Units (AUs).
+    - Describe the observable facial features with AU numbers in parentheses (e.g., "eyebrows pulled together (AU4)").
+    - After analyzing the possible AUs present in the face, explain how these AUs collectively indicate a specific emotion.
+    - ⚠️Forbidden to use negative or uncertain expressions such as "no", "not", "without" or "maybe".
 After the thinking process, output only the final emotion.
-    Select one from {Emotions}.
-    Use a single word within <answer>...</answer> tags.
+    - Select one from {Emotions}.
+    - Use a single word within <answer>...</answer> tags.
 
 ### AU Definition
 The following are the definitions of Action Units:
-    AU1: Inner brow raiser;
-    AU2: Outer brow raiser;
-    AU4: Brow lowerer;
-    AU5: Upper lid raiser;
-    AU6: Cheek raiser;
-    AU7: Lid tightener;
-    AU9: Nose wrinkler;
-    AU10: Upper lip raiser;
-    AU11: Nasolabial Furrow Deepener;
-    AU12: Lip corner puller;
-    AU13: Cheek puffer;
-    AU14: Dimpler;
-    AU15: Lip corner depressor;
-    AU16: Lower lip depressor;
-    AU17: Chin raiser;
-    AU18: Lip pucker;
-    AU19: Tongue show;
-    AU20: Lip stretcher;
-    AU22: Lip funneler;
-    AU23: Lip tightener;
-    AU24: Lip pressor;
-    AU25: Lips parted;
-    AU26: Jaw drop;
-    AU27: Mouth stretch;
-    AU28: Lip suck;
-    AU29: Jaw thrust;
-    AU30: Jaw sideways;
-    AU31: Jaw clencher;
-    AU32: Lip bite;
-    AU43: Eyes closed.
+    - AU1: Inner brow raiser;
+    - AU2: Outer brow raiser;
+    - AU4: Brow lowerer;
+    - AU5: Upper lid raiser;
+    - AU6: Cheek raiser;
+    - AU7: Lid tightener;
+    - AU9: Nose wrinkler;
+    - AU10: Upper lip raiser;
+    - AU11: Nasolabial Furrow Deepener;
+    - AU12: Lip corner puller;
+    - AU13: Cheek puffer;
+    - AU14: Dimpler;
+    - AU15: Lip corner depressor;
+    - AU16: Lower lip depressor;
+    - AU17: Chin raiser;
+    - AU18: Lip pucker;
+    - AU19: Tongue show;
+    - AU20: Lip stretcher;
+    - AU22: Lip funneler;
+    - AU23: Lip tightener;
+    - AU24: Lip pressor;
+    - AU25: Lips parted;
+    - AU26: Jaw drop;
+    - AU27: Mouth stretch;
+    - AU28: Lip suck;
+    - AU29: Jaw thrust;
+    - AU30: Jaw sideways;
+    - AU31: Jaw clencher;
+    - AU32: Lip bite;
+    - AU43: Eyes closed.
 
+### Output Format
+<think>
+[Description of observable facial features with AU numbers in parentheses]
+[Explanation of how these AUs relate to a specific emotion]
+</think>
+<answer>[single emotion word]</answer>
+'''.strip()
+
+EXAMPLES = '''
 ### Example
-Here is some examples of the required analysis style:
+Here are some examples that meet the requirements, just refer to the reasoning format of "AU first, then emotion" rather than the content:
 <think>The man's eyebrows are pulled together and lowered (AU4), and the mouth corners are downturned (AU15). This combination of brow lowerer (AU4) and lip corner depressor (AU15) is a strong indicator of sadness.</think>
 <answer>sadness</answer>
 

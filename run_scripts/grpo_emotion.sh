@@ -46,13 +46,13 @@ torchrun --nproc_per_node="8" \
     --attn_implementation flash_attention_2 \
     --run_name ${EXP_NAME} \
     --data_seed 42 \
-    --save_strategy no \
-    --save_steps 10000000000 \
+    --save_strategy steps \
+    --save_steps 100 \
     --max_steps 300 \
     --num_generations 8 \
     --max_completion_length 2048 \
     --reward_funcs accuracy format au \
-    --beta 0.04 \
+    --beta 0.0 \
     --report_to wandb \
     --dataset-name this_is_not_used \
     --deepspeed ${REPO_HOME}/src/open-r1-multimodal/local_scripts/zero3.json \

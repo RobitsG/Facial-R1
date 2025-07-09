@@ -57,9 +57,6 @@ def set_seed(seed):
     os.environ['PYTHONHASHSEED'] = str(seed)
 set_seed(42)
 
-with open('open_r1/configs/config.json', 'r', encoding='utf-8') as f:
-    config = json.load(f)
-
 logger = logging.get_logger(__name__)
 
 client = OpenAI(
@@ -1023,6 +1020,8 @@ def main(script_args, training_args, model_args):
         with open(data_file, 'r') as f:
             for line in f:
                 item = json.loads(line)
+                if item.get('is_valid', True) == False:
+                    continue
                 item['emotions'] = emotions
                 if not item.get('AUs'):
                     continue
@@ -1139,6 +1138,8 @@ def main(script_args, training_args, model_args):
 if __name__ == "__main__":
     parser = TrlParser((GRPOScriptArguments, GRPOConfig, GRPOModelConfig))
     script_args, training_args, model_args = parser.parse_args_and_config()
+    with open('open_r1/configs/config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
     if training_args.deepspeed and "zero3" in training_args.deepspeed:
         print("zero3 is used, qwen2_5vl forward monkey patch is applied")
         monkey_patch_qwen2_5vl_forward()
