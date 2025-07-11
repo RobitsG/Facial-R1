@@ -47,7 +47,7 @@ torchrun --nproc_per_node="8" \
     --run_name ${EXP_NAME} \
     --data_seed 42 \
     --save_strategy steps \
-    --save_steps 100 \
+    --save_steps 300 \
     --max_steps 300 \
     --num_generations 8 \
     --max_completion_length 2048 \

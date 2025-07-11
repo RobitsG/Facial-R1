@@ -565,6 +565,7 @@ class VLMGRPOTrainer(Trainer):
         device = self.accelerator.device
         prompts = [x["prompt"] for x in inputs]
         prompts_text = self.vlm_module.prepare_prompt(self.processing_class, inputs)
+        weights = [x['weights'] for x in inputs]
         # Handle both pre-loaded images and image paths
         images = []
         for x in inputs:
@@ -763,9 +764,8 @@ class VLMGRPOTrainer(Trainer):
 
         self._metrics["reward"].append(self.accelerator.gather_for_metrics(rewards).mean().item())
         self._metrics["reward_std"].append(self.accelerator.gather_for_metrics(std_grouped_rewards).mean().item())
-
+        
         del attention_mask
-        torch.cuda.empty_cache()
         return {
             "prompt_ids": prompt_ids,
             "prompt_mask": prompt_mask,
@@ -775,7 +775,8 @@ class VLMGRPOTrainer(Trainer):
             "ref_per_token_logps": ref_per_token_logps,
             "advantages": advantages,
             "tag_mask_dict": tag_mask_dict,
-            "multimodal_inputs": multimodal_inputs
+            "multimodal_inputs": multimodal_inputs,
+            "weights": weights,
         }
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
@@ -856,7 +857,11 @@ class VLMGRPOTrainer(Trainer):
             del per_token_loss, per_token_loss1, per_token_loss2, coef_1, coef_2
             torch.cuda.empty_cache()
 
-        return total_loss / len(reward_names)
+        weights = inputs['weights']
+        final_loss = total_loss / len(reward_names)
+        final_loss = final_loss * torch.tensor(weights, dtype=final_loss.dtype, device=final_loss.device)
+        self._metrics["loss"].append(self.accelerator.gather_for_metrics(final_loss).mean().item())
+        return final_loss
 
     def log(self, logs: dict[str, float], start_time: Optional[float] = None) -> None:
         metrics = {key: sum(val) / len(val) for key, val in self._metrics.items()}  # average the metrics

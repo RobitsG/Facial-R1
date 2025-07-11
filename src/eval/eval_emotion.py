@@ -325,7 +325,7 @@ for ds in args.test_datasets:
             all_gt_aus.append(gt_aus)
             all_pred_aus.append(pred_aus)
             au_set.update(gt_aus)
-            au_set.update(pred_aus)
+            # au_set.update(pred_aus)
 
             inference_results.append({
                 'image': inp.get('image', ''),
