@@ -94,7 +94,7 @@ def main():
                     "role": "user",
                     "content": [
                         {"type": "image", "image": f"file://{img_path}"},
-                        {"type": "text", "text": PROMPT_TEMPLATE.format(Question=question, Emotions=emotions)}
+                        {"type": "text", "text": PROMPT_TEMPLATE.format(Question=question, Emotions=emotions.keys())}
                     ]
                 }
             ])

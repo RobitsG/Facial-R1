@@ -793,7 +793,7 @@ def all_match_reward(content, sol, **kwargs):
     sol = clean_text(sol)
     return 1.0 if content == sol else 0.0
 
-def default_accuracy_reward(content, sol, **kwargs):
+def default_accuracy_reward(content, sol, weight, **kwargs):
     reward = 0.0
         # Extract answer from solution if it has think/answer tags
     sol_match = re.search(r'<answer>(.*?)</answer>', sol)
@@ -836,13 +836,14 @@ def default_accuracy_reward(content, sol, **kwargs):
         except Exception:
             pass  # Keep reward as 0.0 if all methods fail
 
-    return reward
+    # return reward
+    return reward * weight
 
-def accuracy_reward(completions, solution, **kwargs):
+def accuracy_reward(completions, solution, weights, **kwargs):
     """Reward function that checks if the completion is correct using symbolic verification, exact string matching, or fuzzy matching."""
     contents = [completion[0]["content"] for completion in completions]
     rewards = []
-    for content, sol, accu_reward_method in zip(contents, solution, kwargs.get("accu_reward_method")):
+    for content, sol, weight, accu_reward_method in zip(contents, solution, weights, kwargs.get("accu_reward_method")):
         # if accu_reward_method is defined, use the corresponding reward function, otherwise use the default reward function
         if accu_reward_method == "mcq":
             reward = mcq_reward(content, sol)
@@ -873,7 +874,7 @@ def accuracy_reward(completions, solution, **kwargs):
         elif accu_reward_method == 'all_match':
             reward = all_match_reward(content, sol)
         else:
-            reward = default_accuracy_reward(content, sol)  
+            reward = default_accuracy_reward(content, sol, weight)  
         rewards.append(reward)
         
         if os.getenv("DEBUG_MODE") == "true":
@@ -894,7 +895,7 @@ def accuracy_reward(completions, solution, **kwargs):
     return rewards
 
 
-def format_reward(completions, **kwargs):
+def format_reward(completions, weights, **kwargs):
     """Reward function that checks if the completion has a specific format."""
     pattern = r"<think>.*?</think>\s*<answer>.*?</answer>"
     completion_contents = [completion[0]["content"] for completion in completions]
@@ -909,7 +910,8 @@ def format_reward(completions, **kwargs):
                 f.write(f"Content: {content}\n")
                 f.write(f"Has format: {bool(match)}\n")
 
-    return [1.0 if match else 0.0 for match in matches]
+    # return [1.0 if match else 0.0 for match in matches]
+    return [weight * (1.0 if match else 0.0) for match, weight in zip(matches, weights)]
 
 
 def extract_aus_from_text(text):
@@ -927,18 +929,19 @@ def extract_aus_from_text(text):
     return re.findall(r"AU\d+", think_text.upper())
 
 
-def au_reward(completions, AUs, beta=1.0, **kwargs):
+def au_reward(completions, AUs, weights, beta=1.0, **kwargs):
     rewards = []
+    undifined_aus = set()
     completion_contents = [completion[0]["content"] for completion in completions]
-    for pred, gt in zip(completion_contents, AUs):
+    for pred, gt, weight in zip(completion_contents, AUs, weights):
         pred_aus = extract_aus_from_text(pred) if isinstance(pred, str) else pred
         gt_aus_set = set([s.upper() for s in gt])
         pred_aus_set = set([s.upper() for s in pred_aus])
 
-        if not gt_aus_set and not pred_aus_set:
-            reward = 1.0      # 全对，最高奖励
-        elif not pred_aus_set or not gt_aus_set:
-            reward = -1.0     # 没预测或没GT，最低奖励
+        if not gt_aus_set:
+            reward = 0.0 
+        elif not pred_aus_set:
+            reward = -1.0
         else:
             intersection = len(pred_aus_set & gt_aus_set)
             precision = intersection / len(pred_aus_set) if pred_aus_set else 0.0
@@ -948,8 +951,20 @@ def au_reward(completions, AUs, beta=1.0, **kwargs):
                 (beta ** 2 * precision + recall)
             ) if (precision + recall) else 0.0
             reward = 2 * f_beta - 1  # 转为[-1, 1]
-        rewards.append(reward)
+        rewards.append(reward * weight)
+        # rewards.append(reward)
+        # print(f"pred_aus: {pred_aus}, gt_aus: {gt}, reward: {reward}")
+    print(f"AUs: {AUs}, Rewards: {rewards}")
     return rewards
+
+
+def compute_au_weights(AU_freq, epsilon=1e-6):
+    """AU_freq: {'AU1': 300, 'AU2': 100, ...}"""
+    total = sum(AU_freq.values())
+    weights = {au: 1 / (count / total + epsilon) for au, count in AU_freq.items()}
+    s = sum(weights.values())
+    weights = {au: w / s for au, w in weights.items()}
+    return weights
 
 
 reward_funcs_registry = {
@@ -963,13 +978,6 @@ reward_funcs_registry = {
 @dataclass
 class GRPOModelConfig(ModelConfig):
     freeze_vision_modules: bool = False
-
-# SYSTEM_PROMPT = (
-#     "A conversation between User and Assistant. The user asks a question, and the Assistant solves it. The assistant "
-#     "first thinks about the reasoning process in the mind and then provides the user with the answer. The reasoning "
-#     "process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively, i.e., "
-#     "<think> reasoning process here </think><answer> answer here </answer>"
-# )
 
 
 def get_vlm_module(model_name_or_path):
@@ -1012,43 +1020,63 @@ def main(script_args, training_args, model_args):
     
     if len(data_files) != len(image_folders):
         raise ValueError("Number of data files must match number of image folders")
-    
+
     all_data = []
     for data_file, image_folder, accu_reward_method in zip(data_files, image_folders, accu_reward_methods):
         data_file_name = os.path.basename(data_file)
-        emotions = config[data_file_name]['emotions']
+        emotion_freqs = config[data_file_name]['emotions']
+        AUs_freqs = config[data_file_name]['AUs']
+        AU_weights = compute_au_weights(AUs_freqs)
+        
+        # 第一次：预处理数据，记录weights
+        items = []
+        weights = []
         with open(data_file, 'r') as f:
             for line in f:
                 item = json.loads(line)
                 if item.get('is_valid', True) == False:
                     continue
-                item['emotions'] = emotions
-                if not item.get('AUs'):
-                    continue
-                if 'image' in item:
-                    if isinstance(item['image'], str):
-                        # Store image path instead of loading the image
-                        item['image_path'] = [os.path.join(image_folder, item['image'])]
-                        del item['image'] # remove the image column so that it can be loaded later
-                    elif isinstance(item['image'], list):
-                        # if the image is a list, then it is a list of images (for multi-image input)
-                        item['image_path'] = [os.path.join(image_folder, image) for image in item['image']]
-                        del item['image'] # remove the image column so that it can be loaded later
-                    else:
-                        raise ValueError(f"Unsupported image type: {type(item['image'])}")
-                
-                # Handle solution that could be a float or string
-                solution_value = item['labels'][0]
-                if isinstance(solution_value, str):
-                    item['solution'] = solution_value.replace('<answer>', '').replace('</answer>', '').strip()
+                item['emotion_freqs'] = emotion_freqs
+                weight = sum(AU_weights[au] for au in item['AUs'])
+                item['raw_weight'] = weight # 临时记录未归一化的weight
+                weights.append(weight)      # 收集所有weight
+                items.append(item)
+        
+        if not weights:
+            continue
+        min_w, max_w = min(weights), max(weights)
+        # 防止除0
+        denom = max_w - min_w if (max_w > min_w) else 1.0
+        
+        # 第二次：归一化并处理其它字段，加入all_data
+        for item in items:
+            weight = item['raw_weight']
+            # Min-Max归一化
+            normalized_weight = (weight - min_w) / denom
+            item['weights'] = normalized_weight
+            del item['raw_weight']
+            
+            if 'image' in item:
+                if isinstance(item['image'], str):
+                    item['image_path'] = [os.path.join(image_folder, item['image'])]
+                    del item['image']
+                elif isinstance(item['image'], list):
+                    item['image_path'] = [os.path.join(image_folder, image) for image in item['image']]
+                    del item['image']
                 else:
-                    # If it's a float or other non-string type, keep it as is
-                    item['solution'] = str(solution_value)
+                    raise ValueError(f"Unsupported image type: {type(item['image'])}")
+            
+            solution_value = item['labels'][0]
+            if isinstance(solution_value, str):
+                item['solution'] = solution_value.replace('<answer>', '').replace('</answer>', '').strip()
+            else:
+                item['solution'] = str(solution_value)
+            if 'meta_info' in item:
                 del item['meta_info']
+            if 'description' in item:
                 del item['description']
-                
-                item['accu_reward_method'] = item.get('accu_reward_method', accu_reward_method) # if accu_reward_method is in the data jsonl, use the value in the data jsonl, otherwise use the defined value
-                all_data.append(item)
+            item['accu_reward_method'] = item.get('accu_reward_method', accu_reward_method)
+            all_data.append(item)
 
     random.shuffle(all_data)
     dataset = Dataset.from_list(all_data)
@@ -1066,14 +1094,15 @@ def main(script_args, training_args, model_args):
                 'problem': question,
                 'solution': f"<answer>{example['solution']}</answer>",
                 'accu_reward_method': example['accu_reward_method'],
-                'Aus': example['AUs'],
+                'AUs': example['AUs'],
+                'weights': example['weights'],
                 # 'description': example['description'],
                 'labels': example['labels'],
                 'prompt': [{
                     'role': 'user',
                     'content': [
                         *({'type': 'image', 'text': None} for _ in range(len(example['image_path']))),
-                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question, Emotions=example['emotions'])}
+                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question, Emotions=example['emotion_freqs'].keys())}
                     ]
                 }]
             }

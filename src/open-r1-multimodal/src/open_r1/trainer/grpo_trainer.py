@@ -714,6 +714,7 @@ class VLMGRPOTrainer(Trainer):
         
         # Sum the rewards from all reward functions
         rewards = rewards_per_func.sum(dim=1)
+        rewards = torch.clamp(rewards, min=-10, max=10)
         
         # Compute grouped-wise rewards
         # Each group consists of num_generations completions for the same prompt

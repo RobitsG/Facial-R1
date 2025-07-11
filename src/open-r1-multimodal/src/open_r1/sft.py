@@ -143,7 +143,7 @@ class LazySupervisedDataset(Dataset):
                     "role": "user",
                     "content": [
                         {"type": "image", "image": f"file://{image_path}"},
-                        {"type": "text", "text": SFT_PROMPT.format(Question=question, Emotions=example['emotions'])},
+                        {"type": "text", "text": SFT_PROMPT.format(Question=question, Emotions=example['emotions'].keys())},
                     ],
                 },
                 {
