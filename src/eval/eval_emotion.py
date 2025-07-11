@@ -334,7 +334,8 @@ for ds in args.test_datasets:
                 'gt_labels': gt_labels,
                 'pred_AUs': pred_aus,
                 'pred_labels': pred_labels,
-                'description': out  # description 就是模型输出
+                'description': out
+                'gt_description': inp.get('description', ''),
             })
 
         label_list = sorted(label_set)
@@ -348,7 +349,7 @@ for ds in args.test_datasets:
 
         # =========== 只保留真值和模型输出的文本，计算rouge并可选GPT评估 ==========
         desc_list = [r['description'] for r in inference_results]
-        gt_desc_list = [inp.get('description', '') for inp in data]
+        gt_desc_list = [r['gt_description'] for r in inference_results]
         rouge_mean, rouge_per_row = get_rouge_scores(desc_list, gt_desc_list)
         for i, row in enumerate(inference_results):
             row['gt_description'] = gt_desc_list[i]
