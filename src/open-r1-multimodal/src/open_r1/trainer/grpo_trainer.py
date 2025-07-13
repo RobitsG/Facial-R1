@@ -857,9 +857,9 @@ class VLMGRPOTrainer(Trainer):
             del per_token_loss, per_token_loss1, per_token_loss2, coef_1, coef_2
             torch.cuda.empty_cache()
 
-        weights = inputs['weights']
         final_loss = total_loss / len(reward_names)
-        final_loss = final_loss * torch.tensor(weights, dtype=final_loss.dtype, device=final_loss.device)
+        weights = torch.tensor(inputs['weights'], dtype=final_loss.dtype, device=final_loss.device)
+        final_loss = (final_loss * weights).sum()
         self._metrics["loss"].append(self.accelerator.gather_for_metrics(final_loss).mean().item())
         return final_loss
 

@@ -30,12 +30,13 @@ from transformers import AutoTokenizer, set_seed, AutoProcessor
 from transformers.trainer_utils import get_last_checkpoint
 from open_r1.configs import SFTConfig
 from open_r1.utils.callbacks import get_callbacks
-from open_r1.prompts.emotion_prompt import SFT_PROMPT
+from open_r1.prompts.emotion_prompt import SFT_PROMPT, GRPO_PROMPT
 import yaml
 import json
 import math
 import random
 from PIL import Image
+import numpy as np
 
 def set_seed(seed):
     random.seed(seed)
@@ -61,7 +62,8 @@ from dataclasses import dataclass
 
 @dataclass
 class SFTScriptArguments(ScriptArguments):
-    image_root: str = field(default=None, metadata={"help": "The root directory of the image."})
+    # image_root: str = field(default=None, metadata={"help": "The root directory of the image."})
+    pass
 
 
 processor = None
@@ -79,15 +81,18 @@ class LazySupervisedDataset(Dataset):
                 # file should be in the format of:
                 # datasets:
                 #   - json_path: xxxx1.json
+                #     image_root: xxxx1_image_root
                 #     sampling_strategy: first:1000
                 #   - json_path: xxxx2.json
+                #     image_root: xxxx2_image_root
                 #     sampling_strategy: end:3000
                 #   - json_path: xxxx3.json
+                #     image_root: xxxx3_image_root
                 #     sampling_strategy: random:999
 
                 for data in datasets:
-                    json_path = data.get("json_path")
-                    json_path = data.get("json_path")
+                    json_path = data["json_path"]
+                    image_root = data["image_root"]
                     emotions = config[os.path.basename(json_path)]["emotions"]
                     sampling_strategy = data.get("sampling_strategy", "all")
                     sampling_number = None
@@ -96,9 +101,10 @@ class LazySupervisedDataset(Dataset):
                         cur_data_dict = []
                         with open(json_path, "r") as json_file:
                             for line in json_file:
+                                item = json.loads(line.strip())
+                                item['image_root'] = image_root
                                 if item.get("is_valid", True) == False:
                                     continue
-                                item = json.loads(line.strip())
                                 item['emotions'] = emotions
                                 cur_data_dict.append(item)
                     else:
@@ -130,25 +136,23 @@ class LazySupervisedDataset(Dataset):
     def __getitem__(self, i):
         # Format into conversation
         def make_conversation_image(example):
-            image_root = self.script_args.image_root
-            image_path = os.path.join(image_root, example['image'])
+            image_path = os.path.join(example['image_root'], example['image'])
             if example['question']:
-                question = example['question'].relace('<image>', '').strip()
+                question = example['question'].replace('<image>', '').strip()
             else:
                 question = "What is the emotion of this face?"
-
-            label = example['labels'][0]
+            # question = "What is the emotion of this face?"
             return  [
                 {
                     "role": "user",
                     "content": [
                         {"type": "image", "image": f"file://{image_path}"},
-                        {"type": "text", "text": SFT_PROMPT.format(Question=question, Emotions=example['emotions'].keys())},
+                        {"type": "text", "text": GRPO_PROMPT.format(Question=question, Emotions=example['emotions'].keys())},
                     ],
                 },
                 {
                     "role": "assistant",
-                    "content": label,
+                    "content": example['description'],
                 }
             ]
         example = self.list_data_dict[i]

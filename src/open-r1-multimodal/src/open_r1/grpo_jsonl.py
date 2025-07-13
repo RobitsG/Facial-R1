@@ -795,9 +795,11 @@ def all_match_reward(content, sol, **kwargs):
 
 def default_accuracy_reward(content, sol, weight, **kwargs):
     reward = 0.0
-        # Extract answer from solution if it has think/answer tags
+    # Extract answer from solution if it has think/answer tags
     sol_match = re.search(r'<answer>(.*?)</answer>', sol)
     ground_truth = sol_match.group(1).strip() if sol_match else sol.strip()
+    if not ground_truth or not ground_truth.lstrip("<answer>").rstrip("</answer>"):
+        return 0.5
     
     # Extract answer from content if it has think/answer tags
     content_matches = re.findall(r'<answer>(.*?)</answer>', content, re.DOTALL)
@@ -891,7 +893,6 @@ def accuracy_reward(completions, solution, weights, **kwargs):
                     f.write(f"Content: {content}\n")
                     f.write(f"Solution: {sol}\n")     
 
-        
     return rewards
 
 
@@ -951,10 +952,9 @@ def au_reward(completions, AUs, weights, beta=1.0, **kwargs):
                 (beta ** 2 * precision + recall)
             ) if (precision + recall) else 0.0
             reward = 2 * f_beta - 1  # 转为[-1, 1]
-        # rewards.append(reward * weight)
         rewards.append(reward)
+        # rewards.append(reward * weight)
         print(f"pred_aus: {pred_aus}, gt_aus: {gt}, reward: {reward}")
-    # print(f"AUs: {AUs}, Rewards: {rewards}")
     return rewards
 
 
@@ -1086,6 +1086,7 @@ def main(script_args, training_args, model_args):
             question = example['question'].replace('<image>', '').strip()
         else:
             question = "What is the emotion of this face?"
+        # question = "What is the emotion of this face?"
         if 'image_path' in example and example['image_path'] is not None:
             assert all(os.path.exists(p) for p in example['image_path']), f"Image paths do not exist: {example['image_path']}"
             # Don't load image here, just store the path
@@ -1108,17 +1109,6 @@ def main(script_args, training_args, model_args):
             }
         else:
             raise ValueError("No image path found")
-            # return {
-            #     'problem': example['problem'],
-            #     'solution': f"<answer> {example['solution']} </answer>",
-            #     'accu_reward_method': example['accu_reward_method'],
-            #     'prompt': [{
-            #         'role': 'user',
-            #         'content': [
-            #             {'type': 'text', 'text': GRPO_PROMPT.format(Question=question)}
-            #         ]
-            #     }]
-            # }
 
     # Map the conversations
     dataset = dataset.map(make_conversation_from_jsonl, num_proc=8)
@@ -1160,6 +1150,7 @@ def main(script_args, training_args, model_args):
 
     # Save and push to hub
     trainer.save_model(training_args.output_dir)
+    # processor.save_pretrained(training_args.output_dir)
     if training_args.push_to_hub:
         trainer.push_to_hub()
 

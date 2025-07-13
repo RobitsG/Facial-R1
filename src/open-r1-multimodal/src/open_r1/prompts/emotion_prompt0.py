@@ -88,58 +88,47 @@ Here are some examples that meet the requirements, just refer to the reasoning f
 '''.strip()
 
 
-GRPO_PROMPT = '''
-### Question
-{Question}
-
-### Requirements
-First, output the thinking process in <think>...</think> tags. 
-    - Provide a concise and precise analysis as a continuous paragraph focusing on the critical Action Units (AUs).
-    - Describe the observable facial features with AU numbers in parentheses (e.g., "eyebrows pulled together (AU4)").
-    - After analyzing the possible AUs present in the face, explain how these AUs collectively indicate a specific emotion.
-    - ⚠️Forbidden to use negative or uncertain expressions such as "no", "not", "without" or "maybe".
-    - ⚠️Reduce unnecessary talk and be as concise as possible.
-After the thinking process, output only the final emotion in <answer>...</answer> tags.
-    - Use a single word from {Emotions}.
-
-### AU Definition
-The following are the definitions of Action Units:
-    - AU1: Inner brow raiser;
-    - AU2: Outer brow raiser;
-    - AU4: Brow lowerer;
-    - AU5: Upper lid raiser;
-    - AU6: Cheek raiser;
-    - AU7: Lid tightener;
-    - AU9: Nose wrinkler;
-    - AU10: Upper lip raiser;
-    - AU11: Nasolabial Furrow Deepener;
-    - AU12: Lip corner puller;
-    - AU13: Cheek puffer;
-    - AU14: Dimpler;
-    - AU15: Lip corner depressor;
-    - AU16: Lower lip depressor;
-    - AU17: Chin raiser;
-    - AU18: Lip pucker;
-    - AU19: Tongue show;
-    - AU20: Lip stretcher;
-    - AU22: Lip funneler;
-    - AU23: Lip tightener;
-    - AU24: Lip pressor;
-    - AU25: Lips parted;
-    - AU26: Jaw drop;
-    - AU27: Mouth stretch;
-    - AU28: Lip suck;
-    - AU29: Jaw thrust;
-    - AU30: Jaw sideways;
-    - AU31: Jaw clencher;
-    - AU32: Lip bite;
-    - AU43: Eyes closed.
-
-### Example
-This is an example that meets the requirements:
-<think>In analyzing the facial expression, key Action Units include upper lip raising (AU10), chin raising (AU17), and lip funneling (AU22). The upper lip raised indicates a display of disdain or hostility, while the chin raised suggests a feeling of defiance or assertiveness. The lip funneling can indicate tension or frustration in the expression. Together, these AUs coalesce to portray a strong emotional state where the individual might feel anger or strong irritation. The combination of disdain, defiance, and tension clearly signifies an intense emotional reaction, thus pointing towards anger as the primary emotion.</think>
-<answer>anger</answer>
-'''.strip()
+GRPO_PROMPT = (
+    "Question: {Question}\n"
+    "First, output the thinking process in <think>...</think> tags, "
+    "producing a concise and precise analysis by only describing the most decisive AUs and how these lead to your emotion inference.\n"
+    "Seamlessly integrate only truly relevant AU numbers (in parentheses), directly tying each to your emotional reasoning—avoid uncertainty, negations, or mentioning unlikely emotions.\n"
+    "After the thinking process, output only the final emotion—choose one from {Emotions}—as a single word in <answer>...</answer> tags.\n\n"
+    "Use these AU definitions and their possible emotional associations:\n"
+    "AU1: Inner brow raiser; "
+    "AU2: Outer brow raiser; "
+    "AU4: Brow lowerer; "
+    "AU5: Upper lid raiser; "
+    "AU6: Cheek raiser; "
+    "AU7: Lid tightener; "
+    "AU9: Nose wrinkler; "
+    "AU10: Upper lip raiser; "
+    "AU11: Nasolabial Furrow Deepener; "
+    "AU12: Lip corner puller; "
+    "AU13: Cheek puffer; "
+    "AU14: Dimpler; "
+    "AU15: Lip corner depressor; "
+    "AU16: Lower lip depressor; "
+    "AU17: Chin raiser; "
+    "AU18: Lip pucker; "
+    "AU19: Tongue show; "
+    "AU20: Lip stretcher; "
+    "AU22: Lip funneler; "
+    "AU23: Lip tightener; "
+    "AU24: Lip pressor; "
+    "AU25: Lips parted; "
+    "AU26: Jaw drop; "
+    "AU27: Mouth stretch; "
+    "AU28: Lip suck; "
+    "AU29: Jaw thrust; "
+    "AU30: Jaw sideways; "
+    "AU31: Jaw clencher; "
+    "AU32: Lip bite; "
+    "AU43: Eyes closed.\n\n"
+    "Here is a sample of the required analysis style:\n"
+    "<think>In analyzing the facial expression, key Action Units include upper lip raising (AU10), chin raising (AU17), and lip funneling (AU22). The upper lip raised indicates a display of disdain or hostility, while the chin raised suggests a feeling of defiance or assertiveness. The lip funneling can indicate tension or frustration in the expression. Together, these AUs coalesce to portray a strong emotional state where the individual might feel anger or strong irritation. The combination of disdain, defiance, and tension clearly signifies an intense emotional reaction, thus pointing towards anger as the primary emotion.</think>\n"
+    "<answer>anger</answer>"
+)
 
 GT = '''
 ### Ground Truth

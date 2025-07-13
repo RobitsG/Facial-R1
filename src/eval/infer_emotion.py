@@ -10,7 +10,7 @@ import warnings
 
 warnings.filterwarnings("ignore", category=UserWarning, module="transformers")
 
-from open_r1.prompts.emotion_prompt import GRPO_PROMPT, SFT_PROMPT
+from open_r1.prompts.emotion_prompt import INFER_PROMPT, GRPO_PROMPT
 
 def set_seed(seed):
     import random
@@ -49,12 +49,6 @@ def main():
         local_rank, world_size, rank = 0, 1, 0
     device = f"cuda:{local_rank}" if torch.cuda.is_available() else "cpu"
     args = parse_args()
-    
-    # prompt和config读取，与原评估脚本一致
-    if args.prompt_mode == "grpo":
-        PROMPT_TEMPLATE = GRPO_PROMPT
-    else:
-        PROMPT_TEMPLATE = SFT_PROMPT
 
     with open(args.config_json, 'r', encoding='utf-8') as f:
         config = json.load(f)
@@ -94,7 +88,12 @@ def main():
                     "role": "user",
                     "content": [
                         {"type": "image", "image": f"file://{img_path}"},
-                        {"type": "text", "text": PROMPT_TEMPLATE.format(Question=question, Emotions=emotions.keys())}
+                        {"type": "text", "text": INFER_PROMPT.format(
+                            Question=question, 
+                            Emotions=emotions.keys(),
+                            true_aus=item['AUs'],
+                            true_emotion=item['labels'],
+                        )}
                     ]
                 }
             ])

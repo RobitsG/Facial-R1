@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument("--test_datasets", nargs='+', default=["PrivateTest_images_annotations"], help="测试数据集列表")
     parser.add_argument("--data_root", type=str, default="/root/paddlejob/workspace/wujiulong/emotion_data/FER2013", help="数据根目录")
     parser.add_argument("--image_root", type=str, default="/root/paddlejob/workspace/wujiulong/emotion_data/FER2013", help="图片根目录")
-    parser.add_argument("--num_samples", type=int, default=100, help="测试样本数量")
+    parser.add_argument("--num_samples", type=int, default=-1, help="测试样本数量")
     parser.add_argument("--model_path", type=str, default=None, help="模型路径")
     parser.add_argument("--output_path", type=str, default=None, help="输出日志路径")
     parser.add_argument("--config_path", type=str, default=None)
@@ -245,7 +245,8 @@ for ds in args.test_datasets:
                 data.append(json.loads(line))
     random.seed(42)
     random.shuffle(data)
-    data = data[:args.num_samples]
+    if args.num_samples > 0:
+        data = data[:args.num_samples]
 
     if args.test_mode == "grpo":
         QUESTION_PROMPT = GRPO_PROMPT
@@ -263,6 +264,7 @@ for ds in args.test_datasets:
     for x in rank_data:
         img = os.path.join(args.image_root, x['image'])
         question = x['question'].replace('<image>', '').strip() if x['question'] else "What is the emotion of this face?"
+        # question = "What is the emotion of this face?"
         messages.append([
             {
                 "role": "user",
@@ -319,7 +321,7 @@ for ds in args.test_datasets:
             all_gt_labels.append(gt_labels)
             all_pred_labels.append(pred_labels)
             label_set.update(gt_labels)
-            label_set.update(pred_labels)
+            # label_set.update(pred_labels)
             gt_aus = inp.get('AUs', [])
             pred_aus = extract_au_pred_think(out)
             all_gt_aus.append(gt_aus)
@@ -334,18 +336,22 @@ for ds in args.test_datasets:
                 'gt_labels': gt_labels,
                 'pred_AUs': pred_aus,
                 'pred_labels': pred_labels,
-                'description': out
+                'description': out,
                 'gt_description': inp.get('description', ''),
             })
 
         label_list = sorted(label_set)
         au_list = sorted(au_set, key=lambda x: int(x.replace('AU','')) if re.match('AU\d+', x) else 999)
-
-        label_metrics = multilabel_metrics(all_gt_labels, all_pred_labels, label_list)
-        au_metrics = multilabel_metrics(all_gt_aus, all_pred_aus, au_list)
-
-        pretty_print_metrics("Label", label_metrics)
-        pretty_print_metrics("AU", au_metrics, sort_key=lambda x: int(x[0][2:]) if x[0].startswith("AU") and x[0][2:].isdigit() else 999)
+        if label_list:
+            label_metrics = multilabel_metrics(all_gt_labels, all_pred_labels, label_list)
+            pretty_print_metrics("Label", label_metrics)
+        else:
+            label_metrics = None
+        if au_list:
+            au_metrics = multilabel_metrics(all_gt_aus, all_pred_aus, au_list)
+            pretty_print_metrics("AU", au_metrics, sort_key=lambda x: int(x[0][2:]) if x[0].startswith("AU") and x[0][2:].isdigit() else 999)
+        else:
+            au_metrics = None
 
         # =========== 只保留真值和模型输出的文本，计算rouge并可选GPT评估 ==========
         desc_list = [r['description'] for r in inference_results]

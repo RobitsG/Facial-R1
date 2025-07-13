@@ -1,11 +1,11 @@
 export WANDB_API_KEY="726eb58e29b9cbfaf940dc4f286ec9b28749963d"
-export CUDA_VISIBLE_DEVICES=0,1,2,3
+export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
+HOME_PATH="/root/paddlejob/workspace/wujiulong"
 TEST_MODE="grpo"
 TEST_DATASET="FABA-Test"
-TEST_EXAMPLES=2000
-HOME_PATH="/root/paddlejob/workspace/wujiulong"
-MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-${TEST_MODE}"
+IMAGE_ROOT="${HOME_PATH}/emotion_dataset/FABA-Test"
+MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-sft"
 CURRENT_TIME=$(date +%Y%m%d_%H%M%S)
 OUTPUT_PATH="${HOME_PATH}/output/logs/${MODEL_NAME}_${TEST_DATASET}_${CURRENT_TIME}.json"
 CONFIG_PATH="${HOME_PATH}/Facial-R1/src/open-r1-multimodal/src/open_r1/configs/config.json"
@@ -17,11 +17,10 @@ torchrun --nproc_per_node=4 --master_port="12345" eval_emotion.py \
   --test_mode "${TEST_MODE}" \
   --run_name "${MODEL_NAME}" \
   --home_path "${HOME_PATH}" \
-  --bsz 4 \
+  --bsz 8 \
   --test_datasets "${TEST_DATASET}" \
   --data_root "${HOME_PATH}/emotion_dataset" \
-  --image_root "${HOME_PATH}/emotion_dataset/${TEST_DATASET}" \
-  --num_samples "${TEST_EXAMPLES}" \
+  --image_root "${IMAGE_ROOT}" \
   --config_path "${CONFIG_PATH}" \
   --model_path "${HOME_PATH}/output/checkpoints/${MODEL_NAME}" \
   --output_path "${OUTPUT_PATH}"

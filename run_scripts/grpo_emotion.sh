@@ -6,10 +6,10 @@ export EXP_NAME="Qwen2.5-VL-7B-Instruct-emotion-grpo"
 echo "REPO_HOME: $REPO_HOME"
 TASK_TYPE="emo"
 home_dir="/root/paddlejob/workspace/wujiulong"
-data_paths="$home_dir/emotion_dataset/FABA-Train-1000.jsonl" 
+data_paths="$home_dir/emotion_dataset/FABA-Train-gpt-1000.jsonl" 
 image_folders="$home_dir/emotion_dataset/FABA-Train"
-model_path="$home_dir/Qwen2.5-VL-7B-Instruct"
-# model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-grpo"
+# model_path="$home_dir/Qwen2.5-VL-7B-Instruct"
+model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-sft"
 output_path="${home_dir}/output/checkpoints/${EXP_NAME}"
 is_reward_customized_from_vlm_module=False
 echo "data_paths: $data_paths"
@@ -41,15 +41,12 @@ torchrun --nproc_per_node="8" \
     --gradient_accumulation_steps 4 \
     --gradient_checkpointing true \
     --logging_steps 1 \
-    --num_train_epochs 1 \
     --bf16 \
     --attn_implementation flash_attention_2 \
     --run_name ${EXP_NAME} \
     --data_seed 42 \
-    --save_strategy steps \
-    --save_steps 300 \
-    --max_steps 300 \
-    --num_generations 8 \
+    --save_strategy epoch \
+    --num_train_epochs 2 \
     --max_completion_length 2048 \
     --reward_funcs accuracy format au \
     --beta 0.04 \
