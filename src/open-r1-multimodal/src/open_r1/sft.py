@@ -106,6 +106,7 @@ class LazySupervisedDataset(Dataset):
                                 if item.get("is_valid", True) == False:
                                     continue
                                 item['emotions'] = emotions
+                                del item['meta_info']
                                 cur_data_dict.append(item)
                     else:
                         raise ValueError(f"Unsupported file type: {json_path}")
@@ -127,6 +128,7 @@ class LazySupervisedDataset(Dataset):
                         cur_data_dict = cur_data_dict[:sampling_number]
                     print(f"Loaded {len(cur_data_dict)} samples from {json_path}")
                     self.list_data_dict.extend(cur_data_dict)
+            random.shuffle(self.list_data_dict)
         else:
             raise ValueError(f"Unsupported file type: {data_path}")
 

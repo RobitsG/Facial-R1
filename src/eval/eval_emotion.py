@@ -243,7 +243,6 @@ for ds in args.test_datasets:
         for line in file:
             if line.strip():
                 data.append(json.loads(line))
-    random.seed(42)
     random.shuffle(data)
     if args.num_samples > 0:
         data = data[:args.num_samples]

@@ -1096,7 +1096,7 @@ def main(script_args, training_args, model_args):
                 'solution': f"<answer>{example['solution']}</answer>",
                 'accu_reward_method': example['accu_reward_method'],
                 'AUs': example['AUs'],
-                'weights': example['weights'],
+                'weights': example['weights'] * 10,
                 # 'description': example['description'],
                 'labels': example['labels'],
                 'prompt': [{

@@ -7,10 +7,11 @@ export REPO_HOME="${PROJECT_ROOT}"
 echo "REPO_HOME: $REPO_HOME"
 home_dir="/root/paddlejob/workspace/wujiulong"
 data_paths="$home_dir/emotion_dataset/train.yaml" # 支持yaml格式
-model_path="$home_dir/Qwen2.5-VL-7B-Instruct"
+model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-grpo-best"
 echo "data_paths: $data_paths"
 
 export EXP_NAME="Qwen2.5-VL-7B-Instruct-emotion-sft"
+ckpt_path="$home_dir/output/checkpoints/${EXP_NAME}/checkpoint-1968"
 cd ${REPO_HOME}/src/open-r1-multimodal/src
 
 export DEBUG_MODE="true"

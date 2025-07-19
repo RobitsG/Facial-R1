@@ -5,10 +5,10 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
 # 配置参数
 PROMPT_MODE="grpo"  # 可以是 "sft" 或 "grpo"
-DATASET="FABA-Train-1000"
+DATASET="FER2013-Train-3000"
 HOME_PATH="/root/paddlejob/workspace/wujiulong"
-IMAGE_ROOT="${HOME_PATH}/emotion_dataset/FABA-Train"
-MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-${PROMPT_MODE}-loss"
+IMAGE_ROOT="${HOME_PATH}/emotion_dataset/FER2013-Train"
+MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-${PROMPT_MODE}-best"
 
 # 输入输出文件路径
 INPUT_FILE="${HOME_PATH}/emotion_dataset/${DATASET}.jsonl"
