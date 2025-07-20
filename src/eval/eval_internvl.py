@@ -1,13 +1,18 @@
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor  
-from qwen_vl_utils import process_vision_info  
+
+from transformers import AutoModel, AutoTokenizer
 import torch  
 import json  
+import time
 from tqdm import tqdm  
 import re  
 import os  
 import random  
 import argparse
+import openai
 from sklearn.metrics import f1_score, recall_score, accuracy_score
+import torchvision.transforms as T
+from PIL import Image
+from torchvision.transforms.functional import InterpolationMode
 
 import torch.distributed as dist  
 import warnings  
@@ -21,6 +26,81 @@ try:
     import openai
 except:
     openai = None
+
+# ===== InternVL3图像处理函数 =====
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.225)
+
+def build_transform(input_size):
+    MEAN, STD = IMAGENET_MEAN, IMAGENET_STD
+    transform = T.Compose([
+        T.Lambda(lambda img: img.convert('RGB') if img.mode != 'RGB' else img),
+        T.Resize((input_size, input_size), interpolation=InterpolationMode.BICUBIC),
+        T.ToTensor(),
+        T.Normalize(mean=MEAN, std=STD)
+    ])
+    return transform
+
+def find_closest_aspect_ratio(aspect_ratio, target_ratios, width, height, image_size):
+    best_ratio_diff = float('inf')
+    best_ratio = (1, 1)
+    area = width * height
+    for ratio in target_ratios:
+        target_aspect_ratio = ratio[0] / ratio[1]
+        ratio_diff = abs(aspect_ratio - target_aspect_ratio)
+        if ratio_diff < best_ratio_diff:
+            best_ratio_diff = ratio_diff
+            best_ratio = ratio
+        elif ratio_diff == best_ratio_diff:
+            if area > 0.5 * image_size * image_size * ratio[0] * ratio[1]:
+                best_ratio = ratio
+    return best_ratio
+
+def dynamic_preprocess(image, min_num=1, max_num=12, image_size=448, use_thumbnail=False):
+    orig_width, orig_height = image.size
+    aspect_ratio = orig_width / orig_height
+
+    # 计算已存在的图像宽高比
+    target_ratios = set(
+        (i, j) for n in range(min_num, max_num + 1) for i in range(1, n + 1) for j in range(1, n + 1) if
+        i * j <= max_num and i * j >= min_num)
+    target_ratios = sorted(target_ratios, key=lambda x: x[0] * x[1])
+
+    # 找到最接近目标的宽高比
+    target_aspect_ratio = find_closest_aspect_ratio(
+        aspect_ratio, target_ratios, orig_width, orig_height, image_size)
+
+    # 计算目标宽度和高度
+    target_width = image_size * target_aspect_ratio[0]
+    target_height = image_size * target_aspect_ratio[1]
+    blocks = target_aspect_ratio[0] * target_aspect_ratio[1]
+
+    # 调整图像大小
+    resized_img = image.resize((target_width, target_height))
+    processed_images = []
+    for i in range(blocks):
+        box = (
+            (i % (target_width // image_size)) * image_size,
+            (i // (target_width // image_size)) * image_size,
+            ((i % (target_width // image_size)) + 1) * image_size,
+            ((i // (target_width // image_size)) + 1) * image_size
+        )
+        # 分割图像
+        split_img = resized_img.crop(box)
+        processed_images.append(split_img)
+    assert len(processed_images) == blocks
+    if use_thumbnail and len(processed_images) != 1:
+        thumbnail_img = image.resize((image_size, image_size))
+        processed_images.append(thumbnail_img)
+    return processed_images
+
+def load_image(image_file, input_size=448, max_num=12):
+    image = Image.open(image_file).convert('RGB')
+    transform = build_transform(input_size=input_size)
+    images = dynamic_preprocess(image, image_size=input_size, use_thumbnail=True, max_num=max_num)
+    pixel_values = [transform(image) for image in images]
+    pixel_values = torch.stack(pixel_values)
+    return pixel_values
 
 def set_seed(seed):
     import numpy as np
@@ -58,6 +138,7 @@ def parse_args():
     # ===== GPT评估参数 =====
     parser.add_argument("--use_gpt", action='store_true', default=False, help="是否调用GPT评价推理与真值描述是否一致")
     parser.add_argument("--openai_key", type=str, default=None, help="OpenAI API KEY，如需用GPT功能")
+    parser.add_argument("--base_url", type=str, default=None, help="OpenAI API URL，如需用GPT功能")
     args = parser.parse_args()
     if args.model_path is None:
         args.model_path = f"{args.home_path}/output/checkpoints/{args.run_name}"
@@ -69,13 +150,14 @@ args = parse_args()
 
 with open(args.config_path, 'r', encoding='utf-8') as f:
     config = json.load(f)
-model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+
+model = AutoModel.from_pretrained(
     args.model_path,
     torch_dtype=torch.bfloat16,
-    attn_implementation="flash_attention_2",
+    trust_remote_code=True,
     device_map={"": local_rank},
 )
-processor = AutoProcessor.from_pretrained(args.model_path)
+tokenizer = AutoTokenizer.from_pretrained(args.model_path, trust_remote_code=True, use_fast=False)
 
 ############# 辅助函数 ##############
 
@@ -195,40 +277,80 @@ def get_rouge_scores(hyps, refs):
     return mean, result_rows
 
 # ===== GPT辅助函数 =====
-def gpt_judge_alignment(think_list, desc_list, openai_key=None):
+def gpt_judge_alignment(
+        think_list, desc_list, openai_key=None, base_url=None, max_retry=3, sleep_time=2
+    ):
     if openai is None:
         raise ImportError("需要 pip install openai")
-    if openai_key:
-        openai.api_key = openai_key
+    if openai_key is not None:
+        client = openai.OpenAI(api_key=openai_key, base_url=base_url) if base_url else openai.OpenAI(api_key=openai_key)
     elif os.environ.get("OPENAI_API_KEY"):
-        openai.api_key = os.environ["OPENAI_API_KEY"]
+        client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"), base_url=base_url) if base_url else openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
     else:
         raise RuntimeError('No OPENAI_API_KEY provided')
+
     results = []
-    for think, desc in tqdm(list(zip(think_list, desc_list)), desc='GPT评估', total=len(think_list)):
+    for idx, (think, desc) in enumerate(tqdm(list(zip(think_list, desc_list)), desc='GPT评估', total=len(think_list))):
         prompt = (
-            "判断下面模型的推理内容与标准描述是否表达一致。\n"
-            "如果一致，请返回：1 理由\n"
-            "如果不一致，请返回：0 理由\n"
-            f"模型推理内容：{think}\n"
-            f"标准描述：{desc}\n"
+            "请判断下面“模型推理内容”与“标准描述”之间的一致程度。\n"
+            "请返回1-10的分数，10为高度一致，1为完全不一致。\n"
+            "请严格只用如下标准Json完整返回：\n"
+            '{"score":分数, "reason":"简要理由"}\n'
+            "模型推理内容：%s\n"
+            "标准描述：%s\n" % (think, desc)
         )
-        try:
-            resp = openai.ChatCompletion.create(
-                model='gpt-3.5-turbo',
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=128, temperature=0.0,
-            )
-            output = resp['choices'][0]['message']['content'].strip()
-        except Exception as e:
-            output = f"0 [Error: {e}]"
-        if output.startswith('1'):
-            label, reason = 1, output[1:].strip()
-        elif output.startswith('0'):
-            label, reason = 0, output[1:].strip()
-        else:
-            label, reason = 0, output
-        results.append({'label': int(label), 'reason': reason})
+        retry_cnt = 0
+        while retry_cnt < max_retry:
+            try:
+                response = client.chat.completions.create(
+                    model='gpt-4o-mini',
+                    messages=[{"role": "user", "content": prompt}],
+                    max_tokens=128, temperature=0.0,
+                )
+                output = response.choices[0].message.content.strip()
+                # 尝试直接json解析
+                try:
+                    data = json.loads(output)
+                except Exception:
+                    # 尝试用正则提取json字符串片段再解析
+                    json_match = re.search(r'(\{.*?\})', output, re.DOTALL)
+                    if json_match:
+                        try:
+                            data = json.loads(json_match.group(1))
+                        except Exception:
+                            data = None
+                    else:
+                        data = None
+
+                if data and "score" in data and "reason" in data:
+                    try:
+                        score = int(data["score"])
+                        reason = str(data["reason"])
+                        if 1 <= score <= 10:
+                            results.append({'score': score, 'reason': reason})
+                            break
+                        else:
+                            raise ValueError("score 超出范围")
+                    except Exception as e:
+                        # 解析json但score有问题，则重试
+                        retry_cnt += 1
+                        if retry_cnt >= max_retry:
+                            results.append({'score': 0, 'reason': f"得分异常/解析异常:{output}"})
+                            break
+                        time.sleep(sleep_time)
+                        continue
+                else:
+                    retry_cnt += 1
+                    if retry_cnt >= max_retry:
+                        results.append({'score': 0, 'reason': f"Json解析失败:{output}"})
+                        break
+                    time.sleep(sleep_time)
+            except Exception as e:
+                retry_cnt += 1
+                if retry_cnt >= max_retry:
+                    results.append({'score': 0, 'reason': f"请求失败:{e}"})
+                    break
+                time.sleep(sleep_time)
     return results
 
 ############# 主流程 #############
@@ -259,41 +381,27 @@ for ds in args.test_datasets:
     end_idx = start_idx + per_rank if rank < world_size - 1 else len(data)
     rank_data = data[start_idx:end_idx]
 
-    messages = []
-    for x in rank_data:
-        img = os.path.join(args.image_root, x['image'])
-        question = x['question'].replace('<image>', '').strip() if x['question'] else "What is the emotion of this face?"
-        # question = "What is the emotion of this face?"
-        messages.append([
-            {
-                "role": "user",
-                "content": [
-                    {"type": "image", "image": f"file://{img}"},
-                    {"type": "text", "text": QUESTION_PROMPT.format(Question=question, Emotions=emotions.keys())}
-                ]
-            }
-        ])
-
+    # InternVL3-8B推理部分
     rank_outputs = []
-    for i in tqdm(range(0, len(messages), args.bsz), disable=rank!=args.main_rank):
-        batch = messages[i:i+args.bsz]
-        text = [processor.apply_chat_template(msg, tokenize=False, add_generation_prompt=True)
-                for msg in batch]
-        image_inputs, video_inputs = process_vision_info(batch)
-        inputs = processor(
-            text=text,
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            padding_side="left",
-            return_tensors="pt",
-        ).to(device)
-        gen = model.generate(**inputs, use_cache=True, max_new_tokens=256, do_sample=False)
-        trimmed = [out[len(inp):] for inp, out in zip(inputs.input_ids, gen)]
-        texts = processor.batch_decode(
-            trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )
-        rank_outputs.extend(texts)
+    generation_config = dict(max_new_tokens=256, do_sample=False)
+    
+    for x in tqdm(rank_data, disable=rank!=args.main_rank):
+        img_path = os.path.join(args.image_root, x['image'])
+        question = x['question'].replace('<image>', '').strip() if x['question'] else "What is the emotion of this face?"
+        
+        # 加载和处理图像
+        pixel_values = load_image(img_path, max_num=12)
+        if torch.cuda.is_available():
+            pixel_values = pixel_values.to(device)
+            if pixel_values.dtype != torch.bfloat16:
+                pixel_values = pixel_values.to(torch.bfloat16)
+        
+        # 格式化问题
+        formatted_question = f"<image>\n{QUESTION_PROMPT.format(Question=question, Emotions=emotions.keys())}"
+        
+        # 使用模型推理
+        response = model.chat(tokenizer, pixel_values, formatted_question, generation_config)
+        rank_outputs.append(response)
 
     print(f"Rank {rank} finished {len(rank_outputs)} items")
 
@@ -364,27 +472,25 @@ for ds in args.test_datasets:
         print("  ROUGE-1: {:.3f} | ROUGE-2: {:.3f} | ROUGE-L: {:.3f}".format(
             rouge_mean['rouge1'], rouge_mean['rouge2'], rouge_mean['rougeL']))
 
-        gpt_metrics = None
+        mean_gpt_score = None
         if args.use_gpt:
             think_list = [extract_think_text(desc) for desc in desc_list]
-            gpt_results = gpt_judge_alignment(think_list, gt_desc_list, openai_key=args.openai_key)
-            gpt_labels = [r['label'] for r in gpt_results]
+            gpt_results = gpt_judge_alignment(
+                think_list, gt_desc_list, openai_key=args.openai_key, base_url=args.base_url
+            )
+            gpt_scores = [r['score'] for r in gpt_results]
             for i, r in enumerate(gpt_results):
-                inference_results[i]['gpt_label'] = int(r['label'])
+                inference_results[i]['gpt_score'] = int(r['score'])
                 inference_results[i]['gpt_reason'] = r['reason']
-            gt_consistency = [1 for _ in gt_desc_list]
-            acc = accuracy_score(gt_consistency, gpt_labels)
-            rec = recall_score(gt_consistency, gpt_labels)
-            f1 = f1_score(gt_consistency, gpt_labels)
-            gpt_metrics = {'accuracy': acc, 'recall': rec, 'f1': f1}
-            print("\n*** GPT Reasoning-Description Alignment (正例默认全1) ***")
-            print("  Accuracy: {:.3f} | Recall: {:.3f} | F1: {:.3f}".format(acc, rec, f1))
+            mean_gpt_score = float(np.mean(gpt_scores)) if gpt_scores else 0.0
+            print("\n*** GPT Reasoning-Description Alignment (均分统计) ***")
+            print("  GPT Score: {:.3f}".format(mean_gpt_score))
 
         save_results = {
             'label_metrics': label_metrics,
             'au_metrics': au_metrics,
-            'rouge_mean': rouge_mean,
-            'gpt_metrics': gpt_metrics,
+            'rouge': rouge_mean,
+            'gpt_score': mean_gpt_score,
             'inference_results': inference_results
         }
         os.makedirs(os.path.dirname(args.output_path), exist_ok=True)
