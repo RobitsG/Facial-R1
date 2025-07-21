@@ -176,3 +176,4 @@ wandb/
 scripts/
 checkpoints/
 .vscode/
+core.*

@@ -1,4 +1,3 @@
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor  
 from qwen_vl_utils import process_vision_info  
 import torch  
 import json  
@@ -7,6 +6,8 @@ import re
 import os  
 import random  
 import argparse
+import openai
+import base64
 
 import torch.distributed as dist  
 import warnings  
@@ -64,13 +65,6 @@ args = parse_args()
 
 with open(args.config_path, 'r', encoding='utf-8') as f:
     config = json.load(f)
-model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-    args.model_path,
-    torch_dtype=torch.bfloat16,
-    attn_implementation="flash_attention_2",
-    device_map={"": local_rank},
-)
-processor = AutoProcessor.from_pretrained(args.model_path)
 
 ############# 主流程 #############
 
@@ -104,7 +98,6 @@ for ds in args.test_datasets:
     for x in rank_data:
         img = os.path.join(args.image_root, x['image'])
         question = x['question'].replace('<image>', '').strip() if x['question'] else "What is the emotion of this face?"
-        # question = "What is the emotion of this face?"
         messages.append([
             {
                 "role": "user",
@@ -115,26 +108,55 @@ for ds in args.test_datasets:
             }
         ])
 
+    # ========== 只修改本段推理部分，如下 ==========
+    def encode_image_to_base64(image_path):
+        with open(image_path, 'rb') as img_file:
+            return base64.b64encode(img_file.read()).decode('utf-8')
+
+    try:
+        from openai import OpenAI  # OpenAI官方最新SDK推荐写法
+        if args.openai_key:
+            client = OpenAI(api_key=args.openai_key, base_url=args.base_url)
+        else:
+            client = OpenAI()
+        use_openai_client = True
+    except ImportError:
+        use_openai_client = False
+        raise RuntimeError("openai库未安装，请 pip install openai>=1.3.2")
+
     rank_outputs = []
     for i in tqdm(range(0, len(messages), args.bsz), disable=rank!=args.main_rank):
         batch = messages[i:i+args.bsz]
-        text = [processor.apply_chat_template(msg, tokenize=False, add_generation_prompt=True)
-                for msg in batch]
-        image_inputs, video_inputs = process_vision_info(batch)
-        inputs = processor(
-            text=text,
-            images=image_inputs,
-            videos=video_inputs,
-            padding=True,
-            padding_side="left",
-            return_tensors="pt",
-        ).to(device)
-        gen = model.generate(**inputs, use_cache=True, max_new_tokens=1024, do_sample=False)
-        trimmed = [out[len(inp):] for inp, out in zip(inputs.input_ids, gen)]
-        texts = processor.batch_decode(
-            trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
-        )
+        texts = []
+        for msg in batch:
+            image_path = msg[0]["content"][0]["image"].replace("file://", "")
+            image_b64 = encode_image_to_base64(image_path)
+            prompt_text = msg[0]["content"][1]["text"]
+
+            # 按openai gpt-4o多模态chat接口调用
+            rsp = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{image_b64}"
+                            }
+                        },
+                        {
+                            "type": "text",
+                            "text": prompt_text
+                        }
+                    ]
+                }],
+                max_tokens=1024,
+                temperature=0.0,
+            )
+            texts.append(rsp.choices[0].message.content.strip())
         rank_outputs.extend(texts)
+    # ========== 推理部分结束，后续全部保持原样 ==========
 
     print(f"Rank {rank} finished {len(rank_outputs)} items")
 
