@@ -5,15 +5,15 @@ export CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7
 
 HOME_PATH="/root/paddlejob/workspace/wujiulong"
 TEST_MODE="grpo"
-TEST_DATASET="FER2013-Test"
-IMAGE_ROOT="${HOME_PATH}/emotion_dataset/FER2013-Test"
+TEST_DATASET="FABA-Test-gpt"
+IMAGE_ROOT="${HOME_PATH}/emotion_dataset/FABA-Test"
 # MODEL_NAME="Qwen2.5-VL-7B-Instruct"
 # MODEL_NAME="InternVL3-8B"
-MODEL_NAME="llava-v1.6-vicuna-7b-hf"
+# MODEL_NAME="llava-v1.6-vicuna-7b-hf"
 # MODEL_NAME="gpt4o"
-MODEL_PATH="${HOME_PATH}/${MODEL_NAME}"
-# MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-sft"
-# MODEL_PATH="${HOME_PATH}/output/checkpoints/${MODEL_NAME}"
+# MODEL_PATH="${HOME_PATH}/${MODEL_NAME}"
+MODEL_NAME="Qwen2.5-VL-7B-Instruct-emotion-sft"
+MODEL_PATH="${HOME_PATH}/output/checkpoints/${MODEL_NAME}"
 CURRENT_TIME=$(date +%Y%m%d_%H%M%S)
 OUTPUT_PATH="${HOME_PATH}/output/logs/${MODEL_NAME}_${TEST_DATASET}_${CURRENT_TIME}.json"
 CONFIG_PATH="${HOME_PATH}/Facial-R1/src/open-r1-multimodal/src/open_r1/configs/config.json"
@@ -50,5 +50,6 @@ torchrun --nproc_per_node=8 --master_port="12345" ${EVAL_SCRIPT} \
   --config_path "${CONFIG_PATH}" \
   --model_path "${MODEL_PATH}" \
   --output_path "${OUTPUT_PATH}" \
+  --use_gpt \
   --openai_key "sk-tAKqxIAD0GQvVrVs6f03F7Ce1b5c464e94932fDe085d4080" \
   --base_url "https://aihubmix.com/v1"
