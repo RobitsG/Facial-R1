@@ -1090,6 +1090,10 @@ def main(script_args, training_args, model_args):
         if 'image_path' in example and example['image_path'] is not None:
             assert all(os.path.exists(p) for p in example['image_path']), f"Image paths do not exist: {example['image_path']}"
             # Don't load image here, just store the path
+            if example['emotion_freqs'].keys():
+                emotions = example['emotion_freqs'].keys()
+            else:
+                emotions = ['anger', 'happiness', 'sadness', 'neutral', 'disgust', 'surprise', 'fear']
             return {
                 'image_path': [p for p in example['image_path']],  # Store path instead of loaded image
                 'problem': question,
@@ -1103,7 +1107,7 @@ def main(script_args, training_args, model_args):
                     'role': 'user',
                     'content': [
                         *({'type': 'image', 'text': None} for _ in range(len(example['image_path']))),
-                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question, Emotions=example['emotion_freqs'].keys())}
+                        {'type': 'text', 'text': GRPO_PROMPT.format(Question=question, Emotions=emotions)}
                     ]
                 }]
             }

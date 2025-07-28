@@ -154,7 +154,13 @@ INFER_PROMPT = GRPO_PROMPT + GT
 #     "then output the final emotion—choose only from [anger, happiness, sadness, neutral, disgust, surprise, fear]—using one word in <answer>...</answer> tags."  
 # )
 
-SFT_PROMPT = (  
-    "{Question} "  
-    "Output the final emotion—choose only from [anger, happiness, sadness, neutral, disgust, surprise, fear]."  
-)
+SFT_PROMPT = '''  
+### Question
+{Question}
+
+### Requirements
+First, output the thinking process in <think>...</think> tags. 
+    - Provide a concise and precise analysis as a continuous paragraph focusing on the critical Action Units (AUs).
+After the thinking process, output only the final emotion in <answer>...</answer> tags.
+    - Use a single word from {Emotions}. 
+'''

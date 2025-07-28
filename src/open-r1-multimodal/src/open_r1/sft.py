@@ -144,12 +144,16 @@ class LazySupervisedDataset(Dataset):
             else:
                 question = "What is the emotion of this face?"
             # question = "What is the emotion of this face?"
+            if example['emotions'].keys():
+                emotions = example['emotions'].keys()
+            else:
+                emotions = ['anger', 'happiness', 'sadness', 'neutral', 'disgust', 'surprise', 'fear']
             return  [
                 {
                     "role": "user",
                     "content": [
                         {"type": "image", "image": f"file://{image_path}"},
-                        {"type": "text", "text": GRPO_PROMPT.format(Question=question, Emotions=example['emotions'].keys())},
+                        {"type": "text", "text": GRPO_PROMPT.format(Question=question, Emotions=emotions)},
                     ],
                 },
                 {
