@@ -205,13 +205,13 @@ for ds in args.test_datasets:
         label_list = sorted(label_set)
         au_list = sorted(au_set, key=lambda x: int(x.replace('AU','')) if re.match('AU\d+', x) else 999)
         if label_list:
-            label_metrics = multilabel_metrics(all_gt_labels, all_pred_labels, label_list)
-            pretty_print_metrics("Label", label_metrics)
+            label_metrics = multilabel_metrics(all_gt_labels, all_pred_labels, label_list, mode='label')
+            pretty_print_metrics("Label", label_metrics, mode='label')
         else:
             label_metrics = None
         if au_list:
-            au_metrics = multilabel_metrics(all_gt_aus, all_pred_aus, au_list)
-            pretty_print_metrics("AU", au_metrics, sort_key=lambda x: int(x[0][2:]) if x[0].startswith("AU") and x[0][2:].isdigit() else 999)
+            au_metrics = multilabel_metrics(all_gt_aus, all_pred_aus, au_list, mode='au')
+            pretty_print_metrics("AU", au_metrics, sort_key=lambda x: int(x[0][2:]) if x[0].startswith("AU") and x[0][2:].isdigit() else 999, mode='au')
         else:
             au_metrics = None
 

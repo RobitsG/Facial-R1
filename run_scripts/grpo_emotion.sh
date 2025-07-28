@@ -10,18 +10,18 @@ data_path1="$home_dir/emotion_dataset/FABA-Train-gpt-2000.jsonl"
 data_path2="$home_dir/emotion_dataset/BP4D-gpt-c-Train.jsonl"
 data_path3="$home_dir/emotion_dataset/DISFA-Train-3-gpt-c.jsonl"
 data_path4="$home_dir/emotion_dataset/RAF-AU-Train.jsonl"
-data_path5="$home_dir/emotion_dataset/FER2013-Train-1000-gpt-c.jsonl"
-# data_path6="$home_dir/emotion_dataset/AffectNet-Train-1000-gpt.jsonl"
-# data_path7="$home_dir/emotion_dataset/RAF-DB-Train-1000-gpt.jsonl"
-data_paths="${data_path1}:${data_path2}:${data_path3}:${data_path4}:${data_path5}"
+# data_path5="$home_dir/emotion_dataset/FER2013-Train-1000-gpt-c.jsonl"
+data_path6="$home_dir/emotion_dataset/AffectNet-Train-1000-gpt-c.jsonl"
+data_path7="$home_dir/emotion_dataset/RAF-DB-Train-1000-gpt-c.jsonl"
+data_paths="${data_path1}:${data_path2}:${data_path3}:${data_path4}:${data_path6}:${data_path7}"
 image_folder1="$home_dir/emotion_dataset/FABA-Train"
 image_folder2="$home_dir/emotion_dataset/BP4D"
 image_folder3="$home_dir/emotion_dataset/DISFA-Train"
 image_folder4="$home_dir/emotion_dataset/RAF-AU-Train"
-image_folder5="$home_dir/emotion_dataset/FER2013-Train"
-# image_folder6="$home_dir/emotion_dataset/AffectNet-Train"
-# image_folder7="$home_dir/emotion_dataset/RAF-DB-Train"
-image_folders="${image_folder1}:${image_folder2}:${image_folder3}:${image_folder4}:${image_folder5}"
+# image_folder5="$home_dir/emotion_dataset/FER2013-Train"
+image_folder6="$home_dir/emotion_dataset/AffectNet-Train"
+image_folder7="$home_dir/emotion_dataset/RAF-DB-Train"
+image_folders="${image_folder1}:${image_folder2}:${image_folder3}:${image_folder4}:${image_folder6}:${image_folder7}"
 # model_path="$home_dir/Qwen2.5-VL-7B-Instruct"
 model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-sft"
 output_path="${home_dir}/output/checkpoints/${EXP_NAME}"
@@ -60,7 +60,7 @@ torchrun --nproc_per_node="8" \
     --run_name ${EXP_NAME} \
     --data_seed 42 \
     --save_strategy epoch \
-    --num_train_epochs 2 \
+    --num_train_epochs 1 \
     --max_completion_length 2048 \
     --reward_funcs accuracy format au \
     --beta 0.04 \

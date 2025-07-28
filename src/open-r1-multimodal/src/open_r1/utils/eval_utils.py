@@ -42,7 +42,7 @@ def extract_think_text(model_output):
     m = re.search(r'<think>(.*?)</think>', model_output, re.DOTALL)
     return m.group(1).strip() if m else ""
 
-def multilabel_metrics(gt_list, pred_list, class_names):
+def multilabel_metrics(gt_list, pred_list, class_names, mode='au'):
     n_class = len(class_names)
     class2idx = {c: i for i, c in enumerate(class_names)}
 
@@ -54,6 +54,48 @@ def multilabel_metrics(gt_list, pred_list, class_names):
                     y[i, class2idx[l]] = 1
         return y
 
+    # 单标签模式的计算
+    if mode == 'label':
+        total = len(gt_list)
+        correct = 0
+        
+        # 初始化每类的统计
+        class_correct = np.zeros(n_class, dtype=int)
+        class_total = np.zeros(n_class, dtype=int)
+        
+        for gt_labels, pred_labels in zip(gt_list, pred_list):
+            # 检查是否都是单标签
+            if len(gt_labels) == 1 and len(pred_labels) == 1:
+                gt_class = gt_labels[0]
+                pred_class = pred_labels[0]
+                
+                if gt_class in class2idx:
+                    class_total[class2idx[gt_class]] += 1
+                    
+                    if gt_class == pred_class and pred_class in class2idx:
+                        correct += 1
+                        class_correct[class2idx[gt_class]] += 1
+        
+        # 整体准确率
+        accuracy = correct / total if total > 0 else 0.0
+        
+        # 计算per_class指标（单标签模式）
+        per_class = {}
+        for i, name in enumerate(class_names):
+            class_acc = class_correct[i] / class_total[i] if class_total[i] > 0 else 0.0
+            per_class[name] = {
+                'acc': float(class_acc),  # 每类的准确率
+                'recall': None,  # 单标签模式下recall和f1不适用
+                'f1': None,
+                'has_positive': bool(class_total[i] > 0)  # 是否有该类的样本
+            }
+        
+        return {
+            'accuracy': float(accuracy),
+            'per_class': per_class
+        }
+    
+    # 多标签模式的计算（保持不变）
     Y_true = encode_batch(gt_list)
     Y_pred = encode_batch(pred_list)
 
@@ -67,15 +109,11 @@ def multilabel_metrics(gt_list, pred_list, class_names):
     micro_recall = recall_score(Y_true, Y_pred, average='micro', zero_division=0)
     micro_acc = accuracy_score(Y_true, Y_pred)
 
-    # macro 只对有正例类别做平均
+    # 计算per_class指标（多标签模式）
     f1_each = f1_score(Y_true, Y_pred, average=None, zero_division=0)
     recall_each = recall_score(Y_true, Y_pred, average=None, zero_division=0)
     acc_each = (Y_true == Y_pred).mean(axis=0)
-    macro_f1 = f1_each[valid_mask].mean() if valid_class_idxs.size > 0 else 0
-    macro_recall = recall_each[valid_mask].mean() if valid_class_idxs.size > 0 else 0
-    macro_acc = acc_each[valid_mask].mean() if valid_class_idxs.size > 0 else 0
-
-    # 用于per-class输出，如果该类别无正例，则加`None`或0或其他特殊标记
+    
     per_class = {}
     for i, name in enumerate(class_names):
         per_class[name] = {
@@ -85,35 +123,39 @@ def multilabel_metrics(gt_list, pred_list, class_names):
             'has_positive': bool(valid_mask[i])
         }
 
-    return {
-        'macro': {
-            'accuracy': float(macro_acc),
-            'recall': float(macro_recall),
-            'f1': float(macro_f1)
-        },
-        'micro': {
-            'accuracy': float(micro_acc),
-            'recall': float(micro_recall),
-            'f1': float(micro_f1)
-        },
-        'per_class': per_class
-    }
+    # 如果只需要micro指标
+    if mode == 'au':
+        return {
+            'micro': {
+                'accuracy': float(micro_acc),
+                'recall': float(micro_recall),
+                'f1': float(micro_f1)
+            },
+            'per_class': per_class
+        }
 
-def pretty_print_metrics(name, metrics, sort_key=None):
-    print(f"\n=== {name} (多标签) 指标 ===")
-    print("  Macro指标:  Accuracy: {:.3f} | Recall: {:.3f} | F1: {:.3f}".format(
-        metrics['macro']['accuracy'], metrics['macro']['recall'], metrics['macro']['f1']))
-    print("  Micro指标:  Accuracy: {:.3f} | Recall: {:.3f} | F1: {:.3f}".format(
-        metrics['micro']['accuracy'], metrics['micro']['recall'], metrics['micro']['f1']))
+def pretty_print_metrics(name, metrics, mode='au', sort_key=None):
+    # 根据模式选择标题
+    if mode == 'label':
+        print(f"\n=== {name} (单标签) 指标 ===")
+        print("  整体准确率: {:.3f}".format(metrics['accuracy']))
+    elif mode == 'au':
+        print(f"\n=== {name} (多标签) 指标 ===")
+        print("  Micro指标:  Accuracy: {:.3f} | Recall: {:.3f} | F1: {:.3f}".format(
+            metrics['micro']['accuracy'], metrics['micro']['recall'], metrics['micro']['f1']))
+    
+    # 打印per-class结果
     print("\n  Per-Class Results:")
     headers = f"{'Class':<14} {'Acc':>7} {'Recall':>7} {'F1':>7} {'Info':>10}"
     print("  " + headers)
     print("  " + "-" * len(headers))
+    
     items = list(metrics['per_class'].items())
     if sort_key is not None:
         items = sorted(items, key=sort_key)
     else:
         items = sorted(items)
+    
     for k, v in items:
         v_acc = v['acc']
         v_recall = v['recall']
@@ -121,7 +163,13 @@ def pretty_print_metrics(name, metrics, sort_key=None):
         info = ""
         if not v['has_positive']:
             info = "(无正例)"
-        print(f"  {k:<14} {v_acc:7.3f} {str(v_recall)[:7]:>7} {str(v_f1)[:7]:>7} {info:>10}")
+        
+        # 处理单标签模式下recall和f1为None的情况
+        recall_str = str(v_recall)[:7] if v_recall is not None else "None"
+        f1_str = str(v_f1)[:7] if v_f1 is not None else "None"
+        
+        print(f"  {k:<14} {v_acc:7.3f} {recall_str:>7} {f1_str:>7} {info:>10}")
+
 
 # ===== ROUGE辅助函数 =====
 def get_rouge_scores(hyps, refs):

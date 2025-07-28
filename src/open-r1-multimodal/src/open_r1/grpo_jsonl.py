@@ -838,8 +838,8 @@ def default_accuracy_reward(content, sol, weight, **kwargs):
         except Exception:
             pass  # Keep reward as 0.0 if all methods fail
 
-    return reward
-    # return reward * weight
+    # return reward
+    return reward * weight
 
 def accuracy_reward(completions, solution, weights, **kwargs):
     """Reward function that checks if the completion is correct using symbolic verification, exact string matching, or fuzzy matching."""
@@ -911,8 +911,8 @@ def format_reward(completions, weights, **kwargs):
                 f.write(f"Content: {content}\n")
                 f.write(f"Has format: {bool(match)}\n")
 
-    return [1.0 if match else 0.0 for match in matches]
-    # return [weight * (1.0 if match else 0.0) for match, weight in zip(matches, weights)]
+    # return [1.0 if match else 0.0 for match in matches]
+    return [weight * (1.0 if match else 0.0) for match, weight in zip(matches, weights)]
 
 
 def extract_aus_from_text(text):
@@ -952,8 +952,8 @@ def au_reward(completions, AUs, weights, beta=1.0, **kwargs):
                 (beta ** 2 * precision + recall)
             ) if (precision + recall) else 0.0
             reward = 2 * f_beta - 1  # 转为[-1, 1]
-        rewards.append(reward)
-        # rewards.append(reward * weight)
+        # rewards.append(reward)
+        rewards.append(reward * weight)
         print(f"pred_aus: {pred_aus}, gt_aus: {gt}, reward: {reward}")
     return rewards
 
