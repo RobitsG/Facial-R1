@@ -816,30 +816,32 @@ def default_accuracy_reward(content, sol, weight, **kwargs):
     # If symbolic verification failed, try string matching or fuzzy matching
     if reward == 0.0:
         try: 
-            # Check if ground truth contains numbers
-            has_numbers = bool(re.search(r'\d', ground_truth))
-            # Check if it's a multiple choice question
-            has_choices = extract_choice(ground_truth)
+            reward = 1.0 if student_answer == ground_truth else 0.0
+            # # Check if ground truth contains numbers
+            # has_numbers = bool(re.search(r'\d', ground_truth))
+            # # Check if it's a multiple choice question
+            # has_choices = extract_choice(ground_truth)
             
-            if has_numbers:
-                # For numeric answers, use exact matching
-                reward = numeric_reward(student_answer, ground_truth)
-                if reward is None:
-                    reward = ratio(clean_text(student_answer), clean_text(ground_truth))
-            elif has_choices:
-                # For multiple choice, extract and compare choices
-                correct_choice = has_choices.upper()
-                student_choice = extract_choice(student_answer)
-                if student_choice:
-                    reward = 1.0 if student_choice == correct_choice else 0.0
-            else:
-                # For text answers, use fuzzy matching
-                reward = ratio(clean_text(student_answer), clean_text(ground_truth))
+            # if has_numbers:
+            #     # For numeric answers, use exact matching
+            #     reward = numeric_reward(student_answer, ground_truth)
+            #     if reward is None:
+            #         reward = ratio(clean_text(student_answer), clean_text(ground_truth))
+            # elif has_choices:
+            #     # For multiple choice, extract and compare choices
+            #     correct_choice = has_choices.upper()
+            #     student_choice = extract_choice(student_answer)
+            #     if student_choice:
+            #         reward = 1.0 if student_choice == correct_choice else 0.0
+            # else:
+            #     # For text answers, use fuzzy matching
+            #     reward = ratio(clean_text(student_answer), clean_text(ground_truth))
         except Exception:
             pass  # Keep reward as 0.0 if all methods fail
 
-    # return reward
-    return reward * weight
+    # reward = 2 * reward * weight
+    # print(f'pred_label: {student_answer}, gt_label: {ground_truth}, reward: {reward}')
+    return reward
 
 def accuracy_reward(completions, solution, weights, **kwargs):
     """Reward function that checks if the completion is correct using symbolic verification, exact string matching, or fuzzy matching."""
@@ -911,8 +913,8 @@ def format_reward(completions, weights, **kwargs):
                 f.write(f"Content: {content}\n")
                 f.write(f"Has format: {bool(match)}\n")
 
-    # return [1.0 if match else 0.0 for match in matches]
-    return [weight * (1.0 if match else 0.0) for match, weight in zip(matches, weights)]
+    return [1.0 if match else 0.0 for match in matches]
+    # return [weight * (1.0 if match else 0.0) for match, weight in zip(matches, weights)]
 
 
 def extract_aus_from_text(text):
@@ -952,9 +954,9 @@ def au_reward(completions, AUs, weights, beta=1.0, **kwargs):
                 (beta ** 2 * precision + recall)
             ) if (precision + recall) else 0.0
             reward = 2 * f_beta - 1  # 转为[-1, 1]
-        # rewards.append(reward)
-        rewards.append(reward * weight)
-        print(f"pred_aus: {pred_aus}, gt_aus: {gt}, reward: {reward}")
+        rewards.append(reward)
+        # rewards.append(reward * weight)
+        # print(f"pred_aus: {pred_aus}, gt_aus: {gt}, reward: {reward}")
     return rewards
 
 
@@ -1066,7 +1068,7 @@ def main(script_args, training_args, model_args):
                 else:
                     raise ValueError(f"Unsupported image type: {type(item['image'])}")
             
-            solution_value = item['labels'][0]
+            solution_value = item['labels'][0] if item['labels'] else ''
             if isinstance(solution_value, str):
                 item['solution'] = solution_value.replace('<answer>', '').replace('</answer>', '').strip()
             else:

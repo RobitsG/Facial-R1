@@ -35,6 +35,31 @@
       "surprise": 0.1427
     }
   },
+  "RAF-DB-Train-10000.jsonl": {
+    "AUs": {},
+    "emotions": {
+      "anger": 0.0968,
+      "disgust": 0.0985,
+      "fear": 0.0386,
+      "happiness": 0.1963,
+      "neutral": 0.1963,
+      "sadness": 0.1963,
+      "surprise": 0.1772
+    }
+  },
+  "AffectNet-Train-full.jsonl": {
+    "AUs": {},
+    "emotions": {
+      "anger": 0.125,
+      "contempt": 0.125,
+      "disgust": 0.125,
+      "fear": 0.125,
+      "happiness": 0.125,
+      "neutral": 0.125,
+      "sadness": 0.125,
+      "surprise": 0.125
+    }
+  },
   "BP4D-gpt-c.jsonl": {
     "AUs": {
       "AU1": 0.2712,
@@ -507,6 +532,18 @@
       "surprise": 0.1422
     }
   },
+  "RAF-DB-Train-4000.jsonl": {
+    "AUs": {},
+    "emotions": {
+      "anger": 0.1539,
+      "disgust": 0.1539,
+      "fear": 0.0757,
+      "happiness": 0.1542,
+      "neutral": 0.1542,
+      "sadness": 0.1542,
+      "surprise": 0.1539
+    }
+  },
   "FABA-Test-gpt.jsonl": {
     "AUs": {
       "AU1": 0.4437,
@@ -603,6 +640,19 @@
       "surprise": 0.16
     }
   },
+  "AffectNet-Test-full.jsonl": {
+    "AUs": {},
+    "emotions": {
+      "anger": 0.125,
+      "contempt": 0.125,
+      "disgust": 0.125,
+      "fear": 0.125,
+      "happiness": 0.125,
+      "neutral": 0.125,
+      "sadness": 0.125,
+      "surprise": 0.125
+    }
+  },
   "DISFA-Train.jsonl": {
     "AUs": {
       "AU1": 0.1018,
@@ -643,6 +693,18 @@
       "neutral": 0.125,
       "sadness": 0.125,
       "surprise": 0.125
+    }
+  },
+  "RAF-DB-Train-2000.jsonl": {
+    "AUs": {},
+    "emotions": {
+      "anger": 0.1428,
+      "disgust": 0.1433,
+      "fear": 0.1408,
+      "happiness": 0.1433,
+      "neutral": 0.1433,
+      "sadness": 0.1433,
+      "surprise": 0.1433
     }
   },
   "FABA-Train-gpt-2000.jsonl": {

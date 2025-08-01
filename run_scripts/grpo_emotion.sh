@@ -6,24 +6,26 @@ export EXP_NAME="Qwen2.5-VL-7B-Instruct-emotion-grpo"
 echo "REPO_HOME: $REPO_HOME"
 TASK_TYPE="emo"
 home_dir="/root/paddlejob/workspace/wujiulong"
-data_path1="$home_dir/emotion_dataset/FABA-Train-gpt-2000.jsonl"
+data_path1="$home_dir/emotion_dataset/FABA-Train-2000.jsonl"
 data_path2="$home_dir/emotion_dataset/BP4D-gpt-c-Train.jsonl"
-data_path3="$home_dir/emotion_dataset/DISFA-Train-3-gpt-c.jsonl"
+data_path3="$home_dir/emotion_dataset/DISFA-Train-3.jsonl"
 data_path4="$home_dir/emotion_dataset/RAF-AU-Train.jsonl"
-# data_path5="$home_dir/emotion_dataset/FER2013-Train-1000-gpt-c.jsonl"
-data_path6="$home_dir/emotion_dataset/AffectNet-Train-1000-gpt-c.jsonl"
-data_path7="$home_dir/emotion_dataset/RAF-DB-Train-1000-gpt-c.jsonl"
-data_paths="${data_path1}:${data_path2}:${data_path3}:${data_path4}:${data_path6}:${data_path7}"
+data_path5="$home_dir/emotion_dataset/FER2013-Train-1000-gpt-c.jsonl"
+data_path6="$home_dir/emotion_dataset/AffectNet-Train-full.jsonl"
+data_path7="$home_dir/emotion_dataset/RAF-DB-Train.jsonl"
+# data_paths="${data_path1}:${data_path2}:${data_path3}:${data_path4}:${data_path6}:${data_path7}"
+data_paths="${data_path6}"
 image_folder1="$home_dir/emotion_dataset/FABA-Train"
 image_folder2="$home_dir/emotion_dataset/BP4D"
 image_folder3="$home_dir/emotion_dataset/DISFA-Train"
 image_folder4="$home_dir/emotion_dataset/RAF-AU-Train"
-# image_folder5="$home_dir/emotion_dataset/FER2013-Train"
-image_folder6="$home_dir/emotion_dataset/AffectNet-Train"
+image_folder5="$home_dir/emotion_dataset/FER2013-Train"
+image_folder6="$home_dir/emotion_dataset/AffectNet-Train-full"
 image_folder7="$home_dir/emotion_dataset/RAF-DB-Train"
-image_folders="${image_folder1}:${image_folder2}:${image_folder3}:${image_folder4}:${image_folder6}:${image_folder7}"
+# image_folders="${image_folder1}:${image_folder2}:${image_folder3}:${image_folder4}:${image_folder6}:${image_folder7}"
+image_folders="${image_folder6}"
 # model_path="$home_dir/Qwen2.5-VL-7B-Instruct"
-model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-sft"
+model_path="$home_dir/output/checkpoints/Qwen2.5-VL-7B-Instruct-emotion-grpo-temp"
 output_path="${home_dir}/output/checkpoints/${EXP_NAME}"
 is_reward_customized_from_vlm_module=False
 echo "data_paths: $data_paths"
@@ -51,7 +53,7 @@ torchrun --nproc_per_node="8" \
     --image_folders $image_folders \
     --is_reward_customized_from_vlm_module $is_reward_customized_from_vlm_module \
     --task_type $TASK_TYPE \
-    --per_device_train_batch_size 1 \
+    --per_device_train_batch_size 8 \
     --gradient_accumulation_steps 4 \
     --gradient_checkpointing true \
     --logging_steps 1 \
@@ -60,10 +62,11 @@ torchrun --nproc_per_node="8" \
     --run_name ${EXP_NAME} \
     --data_seed 42 \
     --save_strategy epoch \
-    --num_train_epochs 1 \
-    --max_completion_length 2048 \
-    --reward_funcs accuracy format au \
-    --beta 0.04 \
+    --num_train_epochs 8 \
+    --num_generations 8 \
+    --max_completion_length 256 \
+    --reward_funcs accuracy format \
+    --beta 0.0 \
     --report_to wandb \
     --dataset-name this_is_not_used \
     --deepspeed ${REPO_HOME}/src/open-r1-multimodal/local_scripts/zero3.json \

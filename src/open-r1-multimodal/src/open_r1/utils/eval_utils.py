@@ -64,17 +64,15 @@ def multilabel_metrics(gt_list, pred_list, class_names, mode='au'):
         class_total = np.zeros(n_class, dtype=int)
         
         for gt_labels, pred_labels in zip(gt_list, pred_list):
-            # 检查是否都是单标签
-            if len(gt_labels) == 1 and len(pred_labels) == 1:
-                gt_class = gt_labels[0]
-                pred_class = pred_labels[0]
+            gt_class = gt_labels[0]
+            pred_class = pred_labels[0]
+            
+            if gt_class in class2idx:
+                class_total[class2idx[gt_class]] += 1
                 
-                if gt_class in class2idx:
-                    class_total[class2idx[gt_class]] += 1
-                    
-                    if gt_class == pred_class and pred_class in class2idx:
-                        correct += 1
-                        class_correct[class2idx[gt_class]] += 1
+                if gt_class == pred_class and pred_class in class2idx:
+                    correct += 1
+                    class_correct[class2idx[gt_class]] += 1
         
         # 整体准确率
         accuracy = correct / total if total > 0 else 0.0
@@ -123,9 +121,19 @@ def multilabel_metrics(gt_list, pred_list, class_names, mode='au'):
             'has_positive': bool(valid_mask[i])
         }
 
+    # 计算macro指标
+    macro_f1 = f1_each[valid_mask].mean() if valid_class_idxs.size > 0 else 0
+    macro_recall = recall_each[valid_mask].mean() if valid_class_idxs.size > 0 else 0
+    macro_acc = acc_each[valid_mask].mean() if valid_class_idxs.size > 0 else 0
+
     # 如果只需要micro指标
     if mode == 'au':
         return {
+            'macro': {
+                'accuracy': float(macro_acc),
+                'recall': float(macro_recall),
+                'f1': float(macro_f1)
+            },
             'micro': {
                 'accuracy': float(micro_acc),
                 'recall': float(micro_recall),
@@ -141,6 +149,8 @@ def pretty_print_metrics(name, metrics, mode='au', sort_key=None):
         print("  整体准确率: {:.3f}".format(metrics['accuracy']))
     elif mode == 'au':
         print(f"\n=== {name} (多标签) 指标 ===")
+        print("  Macro指标:  Accuracy: {:.3f} | Recall: {:.3f} | F1: {:.3f}".format(
+            metrics['macro']['accuracy'], metrics['macro']['recall'], metrics['macro']['f1']))
         print("  Micro指标:  Accuracy: {:.3f} | Recall: {:.3f} | F1: {:.3f}".format(
             metrics['micro']['accuracy'], metrics['micro']['recall'], metrics['micro']['f1']))
     
