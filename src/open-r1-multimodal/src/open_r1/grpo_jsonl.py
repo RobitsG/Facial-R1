@@ -58,8 +58,8 @@ set_seed(42)
 logger = logging.get_logger(__name__)
 
 client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY"),
-    base_url=os.getenv("OPENAI_API_BASE")
+    api_key=os.getenv("OPENAI_API_KEY", "sk-proj-1234567890"),
+    base_url=os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
 )
 
 from open_r1.qwen2_5vl_monkey_patch import monkey_patch_qwen2_5vl_flash_attn, monkey_patch_qwen2_5vl_forward, monkey_patch_torch_load
@@ -1093,13 +1093,17 @@ def main(script_args, training_args, model_args):
                 emotions = example['emotion_freqs'].keys()
             else:
                 emotions = ['anger', 'happiness', 'sadness', 'neutral', 'disgust', 'surprise', 'fear']
+            if example['AUs']:
+                example['weights'] = example['weights'] * 10
+            else:
+                example['weights'] = [1.0 for _ in range(example['weights'])]
             return {
                 'image_path': [p for p in example['image_path']],  # Store path instead of loaded image
                 'problem': question,
                 'solution': f"<answer>{example['solution']}</answer>",
                 'accu_reward_method': example['accu_reward_method'],
                 'AUs': example['AUs'],
-                'weights': example['weights'] * 10,
+                'weights': example['weights'],
                 # 'description': example['description'],
                 'labels': example['labels'],
                 'prompt': [{
