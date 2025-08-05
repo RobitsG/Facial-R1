@@ -1,9 +1,3 @@
-好的，我已经帮你更新了你的 `README` 文件。
-
-我在其中增加了 `## 📈 Evaluation` 章节，用于说明如何使用 `run_scripts/eval_emotion.sh` 脚本进行评估。同时，我也按照你的要求，增加了 `##  checkpoints` 章节和对应的表格，并将链接留空。
-
-以下是更新后的完整 `README` 内容：
-
 # Facial-R1: Aligning Reasoning and Recognition for Facial Emotion Analysis
 
 This project introduces **Facial-R1**, an R1-style Large Vision-Language Model specialized for aligning reasoning and recognition in facial emotion analysis. By leveraging a novel three-stage training framework, Facial-R1 demonstrates significant improvements in understanding and interpreting the nuanced details of facial expressions, including Action Units (AUs) and emotional states.
@@ -57,11 +51,17 @@ We use a wide range of public datasets (DISFA, BP4D, RAF-AU, FER2013, AffectNet,
 
 Facial-R1 demonstrates state-of-the-art or highly competitive performance across all tasks, consistently outperforming both zero-shot general VLMs and fine-tuned specialized models.
 
-<img src="./assets/results_tables.png" width="900"/>
-
 * **AU Recognition**: Facial-R1 achieves the highest F1-scores on DISFA (73.1%) and RAF-AU (70.2%), and the second-best score on BP4D (67.4%).
+
+  <img src="./assets/tab_au.png" width="450"/>
+
 * **Emotion Recognition**: The model attains SOTA accuracy on FER2013 (69.8%) and FABA-Instruct (67.8%), while remaining highly competitive on AffectNet and RAF-DB.
+
+  <img src="./assets/tab_label.png" width="450"/>
+
 * **Emotion Reasoning**: Facial-R1 significantly outperforms all other methods on our challenging FEA-20K benchmark, achieving the highest ROUGE-L (37.3) and GPT-based score (6.09).
+
+  <img src="./assets/tab_reasoning.png" width="450"/>
 
 ## 🛠️ Setup
 
