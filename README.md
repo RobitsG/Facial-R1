@@ -73,11 +73,11 @@ bash setup.sh
 
 ## 💪🏻 Training Workflow
 
-The training process reflects our three-stage methodology. The provided scripts allow you to replicate this workflow.
+The training process reflects our three-stage methodology. The provided scripts allow you to replicate this workflow. We provide FABA, BP4D, DISFA, RAF-AU, FER2013, AffectNet, and RAF-DB. File suffixes stage1, stage2, and stage3 correspond to training steps 1, 2, and 3 respectively. The sum of all training datasets from stage1 constitutes the training set of our FEA-20K dataset, while the sum of all test sets forms the test set of FEA-20K.
 
 ### Step 1: Supervised Fine-tuning (SFT)
 
-First, we build a foundational model using all datasets: FABA, BP4D, DISFA, RAF-AU, ExpW, FER2013, AffectNet, and RAF-DB.
+First, we build a foundational model using all datasets: FABA, BP4D, DISFA, RAF-AU, FER2013, AffectNet, and RAF-DB.
 
 ```bash
 # Train the SFT model using the full dataset.
@@ -86,7 +86,7 @@ bash run_scripts/sft_emotion.sh
 
 ### Step 2: GRPO Training
 
-Next, we refine the model's reasoning with RL using all datasets: FABA, BP4D, DISFA, RAF-AU, ExpW, FER2013, AffectNet, and RAF-DB.
+Next, we refine the model's reasoning with GRPO using all datasets: FABA, BP4D, DISFA, RAF-AU, FER2013, AffectNet, and RAF-DB.
 
 ```bash
 # Run GRPO training. The script should be configured to use the desired dataset(s).
