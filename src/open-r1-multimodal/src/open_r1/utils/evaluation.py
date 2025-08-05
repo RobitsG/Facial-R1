@@ -11,8 +11,6 @@ import os
 
 
 # We need a special environment setup to launch vLLM from within Slurm training jobs.
-# - Reference code: https://github.com/huggingface/brrr/blob/c55ba3505686d690de24c7ace6487a5c1426c0fd/brrr/lighteval/one_job_runner.py#L105
-# - Slack thread: https://huggingface.slack.com/archives/C043JTYE1MJ/p1726566494958269
 user_home_directory = os.path.expanduser("~")
 VLLM_SLURM_PREFIX = [
     "env",
@@ -27,10 +25,7 @@ def register_lighteval_task(
     configs: Dict[str, str], eval_suite: str, task_name: str, task_list: str, num_fewshot: int = 0
 ):
     """Registers a LightEval task configuration.
-
-    - Core tasks can be added from this table: https://github.com/huggingface/lighteval/blob/main/src/lighteval/tasks/tasks_table.jsonl
-    - Custom tasks that require their own metrics / scripts, should be stored in scripts/evaluation/extended_lighteval_tasks
-
+    
     Args:
         configs (Dict[str, str]): The dictionary to store the task configuration.
         eval_suite (str, optional): The evaluation suite.

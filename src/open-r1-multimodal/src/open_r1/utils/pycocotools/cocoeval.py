@@ -15,7 +15,6 @@ class COCOeval:
     #  E.evaluate();                # run per image evaluation
     #  E.accumulate();              # accumulate per image results
     #  E.summarize();               # display summary metrics of results
-    # For example usage see evalDemo.m and http://mscoco.org/.
     #
     # The evaluation parameters are as follows (defaults in brackets):
     #  imgIds     - [all] N img ids to use for evaluation
@@ -52,7 +51,6 @@ class COCOeval:
     # See also coco, mask, pycocoDemo, pycocoEvalDemo
     #
     # Microsoft COCO Toolbox.      version 2.0
-    # Data, paper, and tutorials available at:  http://mscoco.org/
     # Code written by Piotr Dollar and Tsung-Yi Lin, 2015.
     # Licensed under the Simplified BSD License [see coco/license.txt]
     def __init__(self, cocoGt=None, cocoDt=None, iouType='segm'):

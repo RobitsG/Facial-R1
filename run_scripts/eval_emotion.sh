@@ -49,6 +49,4 @@ torchrun --nproc_per_node=8 --master_port="12345" ${EVAL_SCRIPT} \
   --image_root "${IMAGE_ROOT}" \
   --config_path "${CONFIG_PATH}" \
   --model_path "${MODEL_PATH}" \
-  --output_path "${OUTPUT_PATH}" \
-  --openai_key "sk-tAKqxIAD0GQvVrVs6f03F7Ce1b5c464e94932fDe085d4080" \
-  --base_url "https://aihubmix.com/v1"
+  --output_path "${OUTPUT_PATH}"

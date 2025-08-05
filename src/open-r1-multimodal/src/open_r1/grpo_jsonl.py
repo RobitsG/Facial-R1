@@ -4,8 +4,6 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -60,8 +58,8 @@ set_seed(42)
 logger = logging.get_logger(__name__)
 
 client = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY", "sk-proj-1234567890"),
-    base_url=os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1")
+    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url=os.getenv("OPENAI_API_BASE")
 )
 
 from open_r1.qwen2_5vl_monkey_patch import monkey_patch_qwen2_5vl_flash_attn, monkey_patch_qwen2_5vl_forward, monkey_patch_torch_load
@@ -578,7 +576,6 @@ def detection_score(content, sol, iou_threshold=0.5, alpha=0.7, beta=0.0, gamma=
     return final_score
 
 def cosine_reward(content, tokenizer, acc_reward, **kwargs):
-    #https://arxiv.org/abs/2502.03373
     min_len_value_wrong = 0.0
     max_len_value_wrong = -0.5
     min_len_value_correct = 1.0
