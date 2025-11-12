@@ -1,4 +1,32 @@
-# Facial-R1: Aligning Reasoning and Recognition for Facial Emotion Analysis
+<p align="center">
+  <h2 align="center">[AAAI 2026] Facial-R1: Aligning Reasoning and Recognition for Facial Emotion Analysis
+</h2>
+  <p align="center">
+    <a><strong>Jiulong Wu<sup>1,2*</sup>, </strong></a>
+    <a><strong>Yucheng Shen<sup>1*</sup>, </strong></a>
+    <a><strong>Lingyong Yan<sup>2</sup>, </strong></a>
+    <a><strong>Haixin Sun<sup>1</sup></strong></a>
+    <br>
+    <a><strong>Deguo Xia<sup>2</sup>, </strong></a>
+    <a><strong>Jizhou Huang<sup>2</sup>, </strong></a>
+    <a><strong>Min Cao<sup>1†</sup></strong></a>
+    <br>
+    <sup>1</sup> Soochow University      <sup>2</sup> Baidu Inc.
+    <br>
+    <sup>*</sup>Equal contribution        <sup>†</sup>Corresponding author
+    </br>
+    </br>
+        <a href="#">
+        <img src='https://img.shields.io/badge/Paper-Arxiv-orange' alt='Paper PDF'></a>
+        <a href="https://huggingface.co/datasets/QBiscuits/FEA-20K">
+        <img src='https://img.shields.io/badge/Dataset-HuggingFace-yellow' alt='Dataset'></a>
+        <a href="#">
+        <img src='https://img.shields.io/badge/Model-ModelScope-blue' alt='Model'></a>
+
+</p>
+</p>
+
+## Overview
 
 This project introduces **Facial-R1**, an R1-style Large Vision-Language Model specialized for aligning reasoning and recognition in facial emotion analysis. By leveraging a novel three-stage training framework, Facial-R1 demonstrates significant improvements in understanding and interpreting the nuanced details of facial expressions, including Action Units (AUs) and emotional states.
 
@@ -45,7 +73,7 @@ We conducted a comprehensive set of experiments to validate the effectiveness of
 
 ### Datasets and Metrics
 
-We use a wide range of public datasets (DISFA, BP4D, RAF-AU, FER2013, AffectNet, RAF-DB) and our own **FEA-20K** dataset. Evaluation is performed using F1-score for AU recognition, Accuracy for emotion recognition, and task-specific metrics (REGE, ROUGE-L, GPT-4o-mini score) for reasoning.
+We use a wide range of public datasets (DISFA, BP4D, RAF-AU, FER2013, AffectNet, RAF-DB) and our own **FEA-20K** dataset. Evaluation is performed using the F1-score for AU recognition, Accuracy for emotion recognition, and task-specific metrics (REGE, ROUGE-L, GPT-4o-mini score) for reasoning. To protect copyright, we only provide data annotations in the [huggingface (QBiscuits/FEA-20K)](https://huggingface.co/datasets/QBiscuits/FEA-20K) and do not include face images. Those who need the images should download them from the original data sources.
 
 ### Main Results
 
@@ -54,11 +82,9 @@ Facial-R1 demonstrates state-of-the-art or highly competitive performance across
 * **AU Recognition**: Facial-R1 achieves the highest F1-scores on DISFA (73.1%) and RAF-AU (70.2%), and the second-best score on BP4D (67.4%).
 
   <img src="./assets/tab_au.png" width="450"/>
-
 * **Emotion Recognition**: The model attains SOTA accuracy on FER2013 (69.8%) and FABA-Instruct (67.8%), while remaining highly competitive on AffectNet and RAF-DB.
 
   <img src="./assets/tab_label.png" width="450"/>
-
 * **Emotion Reasoning**: Facial-R1 significantly outperforms all other methods on our challenging FEA-20K benchmark, achieving the highest ROUGE-L (37.3) and GPT-based score (6.09).
 
   <img src="./assets/tab_reasoning.png" width="450"/>
@@ -95,7 +121,7 @@ bash run_scripts/grpo_emotion.sh
 
 ### Step 3: Task-Specific Enhancement
 
-To achieve the best possible performance on a specific benchmark, you can continue GRPO training in 10 iterations on the specific dataset such as RAF-DB.
+To achieve the best possible performance on a specific benchmark, you can continue GRPO training for 10 iterations on a specific dataset like RAF-DB. Training on **8✖️A800 GPUs** takes approximately **240 hours**.
 
 ```bash
 # To fine-tune on a specific dataset, modify the data_paths and image_folders
