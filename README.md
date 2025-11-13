@@ -34,6 +34,13 @@ This project introduces **Facial-R1**, an R1-style Large Vision-Language Model s
 
 The Facial-R1 framework consists of three stages: (1) **Supervised finetuning** (SFT) mitigates hallucinations by establishing basic emotion reasoning capability; (2) **Reinforcement Learning** (RL) leverages verifiable emotional facts as reward signals to build reasonable and flexible reasoning process; (3) **Data Synthesis** iteratively leverages the prior two stages to expand the training dataset, enabling scalable self-improvement of the model.
 
+## Todo List
+
+- [x] paper
+- [x] stage1+2+3 datasets 
+- [x] training code
+- [ ] model weights
+
 ## 🚀 Features
 
 This repository supports:
