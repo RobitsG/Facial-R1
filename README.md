@@ -16,7 +16,7 @@
     <sup>*</sup>Equal contribution        <sup>†</sup>Corresponding author
     </br>
     </br>
-        <a href="#">
+        <a href="http://arxiv.org/abs/2511.10254">
         <img src='https://img.shields.io/badge/Paper-Arxiv-orange' alt='Paper PDF'></a>
         <a href="https://huggingface.co/datasets/QBiscuits/FEA-20K">
         <img src='https://img.shields.io/badge/Dataset-HuggingFace-yellow' alt='Dataset'></a>
@@ -194,5 +194,13 @@ We would like to express our sincere gratitude to the creators of VLM-R1.
 If you find this project useful for your research, please consider citing our work.
 
 ```bib
-
+@misc{wu2025facialr1aligningreasoningrecognition,
+      title={Facial-R1: Aligning Reasoning and Recognition for Facial Emotion Analysis}, 
+      author={Jiulong Wu and Yucheng Shen and Lingyong Yan and Haixin Sun and Deguo Xia and Jizhou Huang and Min Cao},
+      year={2025},
+      eprint={2511.10254},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2511.10254}, 
+}
 ```
