@@ -11,9 +11,9 @@
     <a><strong>Jizhou Huang<sup>2</sup>, </strong></a>
     <a><strong>Min Cao<sup>1†</sup></strong></a>
     <br>
-    <sup>1</sup> Soochow University      <sup>2</sup> Baidu Inc.
+    <sup>1</sup> Soochow University      <sup>2</sup> Baidu Inc.
     <br>
-    <sup>*</sup>Equal contribution        <sup>†</sup>Corresponding author
+    <sup>*</sup>Equal contribution        <sup>†</sup>Corresponding author
     </br>
     </br>
         <a href="http://arxiv.org/abs/2511.10254">
@@ -81,6 +81,18 @@ We conducted a comprehensive set of experiments to validate the effectiveness of
 ### Datasets and Metrics
 
 We use a wide range of public datasets (DISFA, BP4D, RAF-AU, FER2013, AffectNet, RAF-DB) and our own **FEA-20K** dataset. Evaluation is performed using the F1-score for AU recognition, Accuracy for emotion recognition, and task-specific metrics (REGE, ROUGE-L, GPT-4o-mini score) for reasoning. To protect copyright, we only provide data annotations in the [huggingface (QBiscuits/FEA-20K)](https://huggingface.co/datasets/QBiscuits/FEA-20K) and do not include face images. Those who need the images should download them from the original data sources.
+
+> [!NOTE]
+> **Dataset Download Notes**
+>
+> The official FABA link appears to be unavailable. Based on the distribution licenses of FER2013 and FABA, we provide backup download links below (`.tar.gz`):
+>
+> - **FER2013**: [Download](https://l.mailtrack.com/l/2ff73261d482acd11d192664e31b864872e3bd65?u=12848675)
+> - **FABA**: [Download](https://l.mailtrack.com/l/43f0cc5e623491be80230f1ea802c42ee9c2bb42?u=12848675)
+>
+> **Image filename matching**: Among all datasets used, **only FER2013 image filenames have been modified** from the original. If you downloaded FER2013 from Kaggle and found mismatches with the `image` field in FEA-20K, please use the backup link above instead.
+>
+> **Label name normalization**: Emotion label names have been unified across datasets to follow a consistent noun form (e.g., `angry` → `anger`, `happy` → `happiness`). Please ensure your data matches this convention when training on custom datasets.
 
 ### Main Results
 
